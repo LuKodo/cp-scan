@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { fileFromPath, generateUrl, uploadToOCI } from '../services/image.utils';
+import { fileFromPath, generateUrl, uploadToOCI } from '../utils/image.utils';
 import { DocumentScanner } from '@capacitor-mlkit/document-scanner';
 
 type ScannerStatus =
@@ -91,7 +91,6 @@ export function useDocumentScanner() {
             setLoading(false);
         }
     };
-
 
     return {
         takePhoto,

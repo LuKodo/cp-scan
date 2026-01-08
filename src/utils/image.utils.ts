@@ -1,5 +1,5 @@
 import ky from "ky";
-import { http } from "./http";
+import { http } from "../services/http";
 import { Capacitor } from '@capacitor/core';
 
 export const base64ToFile = (

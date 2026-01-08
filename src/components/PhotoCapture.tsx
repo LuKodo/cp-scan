@@ -2,7 +2,7 @@ import { IonLoading, useIonRouter } from '@ionic/react';
 import { Camera, ArrowLeft } from 'lucide-react';
 import { useDocumentScanner } from '../hooks/useDocumentScanner';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-import { toast } from '../services/alert';
+import { toast } from '../utils/alert.utils';
 
 const PhotoCapture: React.FC = () => {
     const router = useIonRouter();

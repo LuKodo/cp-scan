@@ -1,5 +1,3 @@
-import { http } from "./http";
-
 export const getSvgString = (paths: string[]) => {
     const width = 800;
     const height = 300;
@@ -24,18 +22,4 @@ export const getSvgString = (paths: string[]) => {
             .join('')}
 </svg>
 `.trim();
-};
-
-export const signatureService = async (ssc: string, svgFirma: string): Promise<{ saved: boolean }> => {
-    try {
-        return http
-            .patch(`documentos/${ssc}`, {
-                json: {
-                    svgFirma
-                },
-            })
-            .json<{ saved: boolean }>();
-    } catch (error) {
-        return { saved: false };
-    }
 };

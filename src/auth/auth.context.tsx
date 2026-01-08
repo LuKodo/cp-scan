@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { clearSession, getSession, saveSession, Session } from './auth.service';
-import { LoginResponse } from '../services/login';
+import { LoginResponse } from '../types';
 
 type AuthContextType = {
   session: Session | null;

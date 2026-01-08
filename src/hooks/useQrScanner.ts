@@ -1,5 +1,5 @@
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
-import { qrService } from '../services/qr';
+import { qrService } from '../services/scanner.service';
 import { useLocalStorage } from './useLocalStorage';
 import { Camera } from '@capacitor/camera';
 
@@ -46,7 +46,7 @@ export const useQrScanner = ({ sede }: UseQrScannerProps) => {
 
     const processQr = async (value: string): Promise<{ message: string, success: boolean }> => {
         try {
-            const res = await qrService(value, sede);
+            const res = await qrService.process(value, sede);
 
             if (res instanceof Error) {
                 return { message: res.message, success: false };

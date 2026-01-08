@@ -1,7 +1,5 @@
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
-import { qrService } from '../services/qr';
 import { QrCode } from 'lucide-react';
-import { toast } from '../services/alert';
+import { toast } from '../utils/alert.utils';
 import { useAuth } from '../hooks/useAuth';
 import { Redirect } from 'react-router';
 import { useIonRouter } from '@ionic/react';

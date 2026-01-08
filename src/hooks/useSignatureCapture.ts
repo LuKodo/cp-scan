@@ -2,12 +2,11 @@ import { useState } from 'react';
 import {
     useIonViewWillEnter,
     useIonViewWillLeave,
-    useIonRouter,
 } from '@ionic/react';
 import { ScreenOrientation } from '@capacitor/screen-orientation';
-import { getSvgString, signatureService } from '../services/signature';
-import { toast } from '../services/alert';
+import { signatureService } from '../services/signature.service';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { getSvgString } from '../utils/signature.utils';
 
 export const useSignatureCapture = () => {
     const [paths, setPaths] = useState<string[]>([]);
@@ -80,7 +79,7 @@ export const useSignatureCapture = () => {
 
         try {
             const svgString = getSvgString(paths);
-            const response = await signatureService(ssc, svgString);
+            const response = await signatureService.save(ssc, svgString);
 
             if (!response?.saved) {
                 throw new Error('Error al guardar la firma');

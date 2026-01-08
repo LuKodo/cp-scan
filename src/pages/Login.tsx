@@ -1,11 +1,11 @@
 import { IonImg, IonPage } from '@ionic/react';
 import { useEffect, useState } from 'react';
 import Logo from '../resources/splash.png';
-import { loginservice } from '../services/login';
 import { useAuth } from '../hooks/useAuth';
 import { Redirect } from 'react-router';
-import { toast } from '../services/alert';
+import { toast } from '../utils/alert.utils';
 import { LogIn, User, Lock } from 'lucide-react';
+import { authService } from '../services/auth.service';
 
 const Login: React.FC = () => {
   const { login, session } = useAuth();
@@ -51,7 +51,7 @@ const Login: React.FC = () => {
     }
 
     try {
-      const response = await loginservice(username, password);
+      const response = await authService.login(username, password);
       if (response instanceof Error) {
         toast(response.message);
         return;

@@ -1,7 +1,7 @@
 import { IonContent, IonPage } from "@ionic/react";
 import { useAuth } from "../hooks/useAuth";
 import { Redirect } from "react-router";
-import { showPrompt } from "../services/alert";
+import { showPrompt } from "../utils/alert.utils";
 import { LogOut, User } from "lucide-react";
 import { useState } from "react";
 

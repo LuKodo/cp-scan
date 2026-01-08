@@ -1,6 +1,6 @@
 import Layout from '../template/layout';
 import { useSignatureCapture } from '../hooks/useSignatureCapture';
-import { toast } from '../services/alert';
+import { toast } from '../utils/alert.utils';
 import { useIonRouter } from '@ionic/react';
 import { Save, Eraser } from 'lucide-react';
 

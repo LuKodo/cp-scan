@@ -1,5 +1,4 @@
-// src/auth/auth.service.ts
-import { LoginResponse } from '../services/login';
+import { LoginResponse } from "../types";
 
 const FOUR_HOURS = 4 * 60 * 60 * 1000;
 const SESSION_KEY = 'session';
