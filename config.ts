@@ -1,1 +1,1 @@
-export const API_URL = 'http://192.168.3.194:8051';
+export const API_URL = 'https://api-mobile.pharmaser.com.co';
