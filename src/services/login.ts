@@ -1,4 +1,3 @@
-import Swal from "sweetalert2";
 import { http } from "./http";
 
 export interface LoginResponse {
