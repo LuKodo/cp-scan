@@ -14,8 +14,8 @@ const Login: React.FC = () => {
     return <Redirect to="/step-1" />;
   }
 
-  const [username, setUsername] = useState('zambrano');
-  const [password, setPassword] = useState('admin');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [formError, setFormError] = useState({
     username: '',
     password: '',
