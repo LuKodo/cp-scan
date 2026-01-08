@@ -22,7 +22,7 @@ const PhotoCapture: React.FC = () => {
             toast(result.message);
             return;
         }
-        //router.push('/step-3');
+        router.push('/step-3');
     };
 
     const handleBack = () => {
