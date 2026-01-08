@@ -3,11 +3,7 @@ import { qrService } from '../services/scanner.service';
 import { useLocalStorage } from './useLocalStorage';
 import { Camera } from '@capacitor/camera';
 
-interface UseQrScannerProps {
-    sede: string;
-}
-
-export const useQrScanner = ({ sede }: UseQrScannerProps) => {
+export const useQrScanner = () => {
     const { setItem } = useLocalStorage();
 
     const scan = async (): Promise<{ message: string, success: boolean }> => {
@@ -46,13 +42,11 @@ export const useQrScanner = ({ sede }: UseQrScannerProps) => {
 
     const processQr = async (value: string): Promise<{ message: string, success: boolean }> => {
         try {
-            const res = await qrService.process(value, sede);
+            const res = await qrService.process(value)
 
             if (res instanceof Error) {
                 return { message: res.message, success: false };
             }
-
-            setItem('ssc', res.ssc);
             return { message: 'QR escaneado correctamente', success: true };
         } catch {
             return { message: 'Ocurrió un error al procesar el QR', success: false };

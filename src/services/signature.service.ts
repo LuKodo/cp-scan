@@ -1,15 +1,20 @@
-import { http } from "./http";
+import { CapacitorHttp } from "@capacitor/core";
+import { API_URL } from "../../config";
 
 export const signatureService = {
     save: async (ssc: string, svgFirma: string): Promise<{ saved: boolean }> => {
         try {
-            return http
-                .patch(`documentos/${ssc}`, {
-                    json: {
+            await CapacitorHttp
+                .patch({
+                    url: `${API_URL}/documentos/${ssc}`,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    data: {
                         svgFirma
                     },
-                })
-                .json<{ saved: boolean }>();
+                });
+            return { saved: true };
         } catch (error) {
             return { saved: false };
         }

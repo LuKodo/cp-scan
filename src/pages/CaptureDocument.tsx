@@ -8,7 +8,7 @@ import PhotoCapture from "../components/PhotoCapture";
 
 const CaptureDocument: React.FC = () => {
     return (
-        <Layout title="Escaneo Documento">
+        <Layout>
             <PhotoCapture />
         </Layout>
     );

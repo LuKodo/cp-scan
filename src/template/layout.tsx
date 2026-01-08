@@ -1,7 +1,6 @@
 import { IonContent, IonPage } from "@ionic/react";
 import { useAuth } from "../hooks/useAuth";
 import { Redirect } from "react-router";
-import { showPrompt } from "../utils/alert.utils";
 import { LogOut, User } from "lucide-react";
 import { useState } from "react";
 
@@ -9,10 +8,9 @@ import '../global.css';
 
 type Props = {
     children: React.ReactNode;
-    title?: string;
 }
 
-const Layout: React.FC<Props> = ({ children, title = 'CP Scan' }) => {
+const Layout: React.FC<Props> = ({ children }) => {
     const { session, logout } = useAuth();
     const [showUserMenu, setShowUserMenu] = useState(false);
 
@@ -21,14 +19,7 @@ const Layout: React.FC<Props> = ({ children, title = 'CP Scan' }) => {
     }
 
     const handleLogout = async () => {
-        const response = await showPrompt({
-            title: 'Cerrar sesión',
-            message: '¿Estás seguro de cerrar sesión?',
-        });
-
-        if (!response.cancelled) {
-            logout();
-        }
+        logout();
     };
 
     const username = session?.token?.name || 'Usuario';

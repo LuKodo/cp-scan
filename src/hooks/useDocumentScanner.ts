@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { fileFromPath, generateUrl, uploadToOCI } from '../utils/image.utils';
+import { fileFromPath } from '../utils/image.utils';
 import { DocumentScanner } from '@capacitor-mlkit/document-scanner';
+import { documentService } from '../services/document.service';
 
 type ScannerStatus =
     | 'idle'
@@ -64,7 +65,7 @@ export function useDocumentScanner() {
     const takePhoto = async (ssc: string): Promise<{ message: string; success: boolean }> => {
         try {
             setLoading(true);
-            const presigned = await generateUrl(`formula-${ssc}.jpg`);
+            const presigned = await documentService.generateUrl(`formula-${ssc}.jpg`);
             if (!presigned.success) return presigned;
 
             const scanResult = await scanDocument();
@@ -72,13 +73,7 @@ export function useDocumentScanner() {
                 return { success: false, message: scanResult.message };
             }
 
-            // USAR LAS IMÁGENES DEVUELTAS, NO EL STATE
-            const file = await fileFromPath(
-                scanResult.images[0],
-                `formula-${ssc}.jpg`
-            );
-
-            const uploadResult = await uploadToOCI(file, presigned.message);
+            const uploadResult = await documentService.uploadToOCI(scanResult.images[0], presigned.message);
             if (!uploadResult.success) return uploadResult;
 
             return { success: true, message: 'Foto subida correctamente' };

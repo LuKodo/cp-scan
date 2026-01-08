@@ -12,8 +12,7 @@ const QrScanner: React.FC = () => {
     if (!session) {
         return <Redirect to="/login" />;
     }
-    const sede = session.token.sede;
-    const { scan } = useQrScanner({ sede });
+    const { scan } = useQrScanner();
 
     const handleScan = async () => {
         const result = await scan();

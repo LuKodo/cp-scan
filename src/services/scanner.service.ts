@@ -1,18 +1,22 @@
 import { DocumentoEntity } from "../types";
-import { http } from "./http";
 import { getDataQR } from "../utils/qr.utils";
+import { CapacitorHttp } from "@capacitor/core";
+import { API_URL } from "../../config";
 
 export const qrService = {
-    process: async (qr: string, sede: string): Promise<DocumentoEntity | Error> => {
+    process: async (qr: string): Promise<DocumentoEntity | Error> => {
         try {
             const data = getDataQR(qr);
-            const response = await http.post<DocumentoEntity>("documentos", {
-                json: {
+            const response = await CapacitorHttp.post({
+                url: `${API_URL}/documentos`,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                data: {
                     ...data,
-                    centrocosto: sede
                 }
-            }).json();
-            return response;
+            });
+            return response.data;
         } catch (error) {
             return error as Error;
         }

@@ -21,7 +21,7 @@ const CaptureQR: React.FC = () => {
     }
 
     return (
-        <Layout title="Escaneo QR">
+        <Layout>
             <QrScanner />
         </Layout>
     );

@@ -24,7 +24,7 @@ const CaptureSignature: React.FC = () => {
     }
 
     return (
-        <Layout title="Firma">
+        <Layout>
             <div className="w-full max-w-4xl animate-fadeIn space-y-6">
                 <div className="card-modern p-4 bg-linear-to-br from-purple-50 to-pink-50">
                     <div className="bg-white border-4 border-purple-200 rounded-2xl shadow-inner overflow-hidden">

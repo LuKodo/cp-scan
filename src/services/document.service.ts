@@ -1,32 +1,64 @@
-import { APIResponse } from "../types";
-import { http } from "./http";
+import { Capacitor, CapacitorHttp } from "@capacitor/core";
+import { API_URL } from "../../config";
 
 export const documentService = {
-    save: async (file: File): Promise<APIResponse | Error> => {
-        try {
-            const formData = new FormData();
-            formData.append('file', file);
-
-            return http
-                .post("file/upload", {
-                    body: formData,
-                })
-                .json<APIResponse>();
-        } catch (error) {
-            return error as Error;
-        }
-    },
     update: async (ssc: string): Promise<{ saved: boolean }> => {
         try {
-            return http
-                .patch(`documentos/${ssc}`, {
-                    json: {
+            const response = await CapacitorHttp
+                .patch({
+                    url: `${API_URL}/documentos/${ssc}`,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    data: {
                         hasImage: true
                     },
-                })
-                .json<{ saved: boolean }>();
+                });
+            return response.data;
         } catch (error) {
             return { saved: false };
+        }
+    },
+    generateUrl: async (filename: string) => {
+        try {
+            const res = await CapacitorHttp
+                .post({
+                    url: `${API_URL}/file/presigned-url`,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    data: { filename: filename },
+                });
+            return { success: true, message: res.data.url };
+        } catch (error) {
+            if (error instanceof Error) {
+                return { success: false, message: error.message };
+            }
+            console.error(error);
+            return { success: false, message: 'Error generando URL' };
+        }
+    },
+    uploadToOCI: async (path: string, url: string) => {
+        try {
+            const fileUrl = Capacitor.convertFileSrc(path);
+            const response = await fetch(fileUrl);
+            const buffer = await response.arrayBuffer();
+            const binary = new Uint8Array(buffer);
+
+            await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'image/jpeg',
+                },
+                body: binary,
+            });
+
+            return { success: true, message: 'Archivo subido correctamente' };
+        } catch (error) {
+            if (error instanceof Error) {
+                return { success: false, message: error.message };
+            }
+            return { success: false, message: 'Error subiendo archivo a OCI' };
         }
     }
 }
