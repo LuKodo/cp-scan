@@ -13,8 +13,7 @@ type ScannerStatus =
 
 export function useDocumentScanner() {
     const [error, setError] = useState<string | null>(null);
-
-    const [images, setImages] = useState<string[]>([]);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         const checkAvailability = async () => {
@@ -35,6 +34,7 @@ export function useDocumentScanner() {
 
     const scanDocument = async (): Promise<{ success: boolean; images?: string[]; message: string }> => {
         try {
+            setLoading(true);
             const result = await DocumentScanner.scanDocument({
                 resultFormats: 'JPEG',
                 scannerMode: 'FULL',
@@ -56,11 +56,14 @@ export function useDocumentScanner() {
                 success: false,
                 message: err instanceof Error ? err.message : 'Error al escanear documento',
             };
+        } finally {
+            setLoading(false);
         }
     };
 
     const takePhoto = async (ssc: string): Promise<{ message: string; success: boolean }> => {
         try {
+            setLoading(true);
             const presigned = await generateUrl(`formula-${ssc}.jpg`);
             if (!presigned.success) return presigned;
 
@@ -78,16 +81,14 @@ export function useDocumentScanner() {
             const uploadResult = await uploadToOCI(file, presigned.message);
             if (!uploadResult.success) return uploadResult;
 
-            // Limpieza explícita
-            setImages([]);
-
             return { success: true, message: 'Foto subida correctamente' };
-
         } catch (err) {
             return {
                 success: false,
                 message: err instanceof Error ? err.message : 'Error al subir la foto',
             };
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -95,6 +96,6 @@ export function useDocumentScanner() {
     return {
         takePhoto,
         error,
-        images,
+        loading,
     };
 }

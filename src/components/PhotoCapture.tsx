@@ -1,4 +1,4 @@
-import { useIonRouter } from '@ionic/react';
+import { IonLoading, useIonRouter } from '@ionic/react';
 import { Camera, ArrowLeft } from 'lucide-react';
 import { useDocumentScanner } from '../hooks/useDocumentScanner';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -9,7 +9,7 @@ const PhotoCapture: React.FC = () => {
     const { getItem } = useLocalStorage();
     const ssc = getItem('ssc');
 
-    const { takePhoto, images, error } = useDocumentScanner();
+    const { takePhoto, loading } = useDocumentScanner();
 
     const handleTakePhoto = async () => {
         if (!ssc) {
@@ -31,6 +31,11 @@ const PhotoCapture: React.FC = () => {
 
     return (
         <div className="w-full max-w-md animate-fadeIn space-y-4">
+            <IonLoading
+                isOpen={loading}
+                message="Cargando..."
+                duration={0}
+            />
             <div className="card-modern p-8 text-center space-y-6">
                 <div className="space-y-3">
                     <h2 className="text-2xl font-bold text-gray-800">Capturar Fórmula</h2>
