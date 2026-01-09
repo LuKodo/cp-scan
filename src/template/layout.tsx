@@ -28,7 +28,7 @@ const Layout: React.FC<Props> = ({ children }) => {
         };
         checkVersion();
     }, []);
-    
+
     if (version !== VERSION) {
         return <Redirect to="/new-version" />;
     }
