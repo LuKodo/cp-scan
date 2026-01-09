@@ -65,6 +65,7 @@ export function useDocumentScanner() {
         try {
             setLoading(true);
             const presigned = await documentService.generateUrl(`formula-${ssc}.jpg`);
+            console.log(presigned);
             if (!presigned.success) return presigned;
 
             const scanResult = await scanDocument();
