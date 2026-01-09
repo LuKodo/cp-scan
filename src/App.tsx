@@ -39,6 +39,7 @@ import Login from './pages/Login';
 import CaptureSignature from './pages/CaptureSignature';
 import CaptureQR from './pages/CaptureQR';
 import CaptureDocument from './pages/CaptureDocument';
+import NewVersion from './pages/NewVersion';
 
 setupIonicReact();
 
@@ -59,6 +60,9 @@ const App: React.FC = () => {
             </Route>
             <Route exact path="/step-3">
               <CaptureSignature />
+            </Route>
+            <Route exact path="/new-version">
+              <NewVersion />
             </Route>
             <Route exact path="/">
               <Redirect to="/login" />

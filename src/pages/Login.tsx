@@ -6,12 +6,31 @@ import { Redirect } from 'react-router';
 import { toast } from '../utils/alert.utils';
 import { LogIn, User, Lock } from 'lucide-react';
 import { authService } from '../services/auth.service';
+import { versionService } from '../services/version.service';
+import { VERSION } from '../../config';
 
 const Login: React.FC = () => {
   const { login, session } = useAuth();
+  const [version, setVersion] = useState('');
+
+  useEffect(() => {
+    const checkVersion = async () => {
+      try {
+        const response = await versionService.get();
+        setVersion(response.version);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    checkVersion();
+  }, []);
 
   if (session) {
     return <Redirect to="/step-1" />;
+  }
+
+  if (version !== VERSION) {
+    return <Redirect to="/new-version" />;
   }
 
   const [username, setUsername] = useState('');

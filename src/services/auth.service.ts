@@ -1,20 +1,22 @@
-import { CapacitorHttp } from "@capacitor/core";
 import { LoginResponse } from "../types";
-import { API_URL } from "../../config";
+import { http } from "./http";
 
 export const authService = {
     login: async (username: string, password: string): Promise<LoginResponse | Error> => {
-        const body = {
-            name: username,
-            password
-        };
-        const response = await CapacitorHttp.post({
-            url: `${API_URL}/users/login`,
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            data: body
-        });
-        return response.data;
+        try {
+            const body = {
+                name: username,
+                password
+            };
+            const response = await http.post('/users/login', {
+                json: body
+            });
+            return response.json();
+        } catch (e) {
+            if (e instanceof Error) {
+                return e;
+            }
+            return new Error('An unknown error occurred');
+        }
     }
 }

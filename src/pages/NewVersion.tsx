@@ -1,20 +1,10 @@
-import { IonContent, IonPage } from "@ionic/react";
-import { useAuth } from "../hooks/useAuth";
-import { Redirect } from "react-router";
-import { LogOut, User } from "lucide-react";
-import { useEffect, useState } from "react";
+import { IonContent, IonPage } from '@ionic/react';
+import { LogOut, User } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
+import { useEffect, useState } from 'react';
+import { versionService } from '../services/version.service';
 
-import '../global.css';
-import { versionService } from "../services/version.service";
-import { VERSION } from "../../config";
-
-type Props = {
-    children: React.ReactNode;
-}
-
-const Layout: React.FC<Props> = ({ children }) => {
-    const { session, logout } = useAuth();
-    const [showUserMenu, setShowUserMenu] = useState(false);
+const NewVersion: React.FC = () => {
     const [version, setVersion] = useState('');
 
     useEffect(() => {
@@ -28,20 +18,20 @@ const Layout: React.FC<Props> = ({ children }) => {
         };
         checkVersion();
     }, []);
-    
-    if (version !== VERSION) {
-        return <Redirect to="/new-version" />;
-    }
 
-    if (!session) {
-        return <Redirect to="/login" />;
-    }
+    const { session, logout } = useAuth();
+    const [showUserMenu, setShowUserMenu] = useState(false);
+    const [username, setUsername] = useState('');
+
+    useEffect(() => {
+        if (session) {
+            setUsername(session.token.name);
+        }
+    }, [session]);
 
     const handleLogout = async () => {
         logout();
     };
-
-    const username = session?.token?.name || 'Usuario';
 
     return (
         <IonPage>
@@ -85,12 +75,17 @@ const Layout: React.FC<Props> = ({ children }) => {
                 </div>
 
                 {/* Main Content */}
-                <div className="flex flex-col items-center justify-center min-h-full p-6">
-                    {children}
+                <div className="flex flex-col items-center justify-center min-h-full p-6 text-center">
+                    <h1 className="text-2xl font-bold">Nueva version {version} disponible</h1>
+                    <p className="text-lg">Por favor, actualiza la aplicacion para continuar</p>
+
+                    <span className="bg-gradient-purple w-full p-1 rounded-xl font-bold text-lg shadow-xl flex items-center justify-center gap-2 mt-6 text-white cursor-pointer">
+                        <span className="text-white font-medium">Actualizar</span>
+                    </span>
                 </div>
             </IonContent>
         </IonPage>
     );
 };
 
-export default Layout;
+export default NewVersion;

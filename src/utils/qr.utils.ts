@@ -7,6 +7,11 @@ export const getDataQR = (qr: string): DocumentoEntity => {
         throw new Error("No hay sesión");
     }
     const sede = JSON.parse(session).token.sede;
+
+    if (!qr.includes("|")) {
+        throw new Error("QR inválido");
+    }
+
     const data = qr.split("|");
     localStorage.setItem("ssc", data[0].split(":")[1].trim());
     return {

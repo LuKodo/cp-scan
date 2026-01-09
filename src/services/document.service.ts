@@ -1,35 +1,33 @@
-import { Capacitor, CapacitorHttp } from "@capacitor/core";
+import { Capacitor } from "@capacitor/core";
 import { API_URL } from "../../config";
+import { http } from "./http";
 
 export const documentService = {
-    update: async (ssc: string): Promise<{ saved: boolean }> => {
+    update: async (ssc: string): Promise<{ saved: boolean, message?: string }> => {
         try {
-            const response = await CapacitorHttp
-                .patch({
-                    url: `${API_URL}/documentos/${ssc}`,
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    data: {
+            const response = await http
+                .patch(`/documentos/${ssc}`, {
+                    json: {
                         hasImage: true
                     },
                 });
-            return response.data;
+            return response.json();
         } catch (error) {
-            return { saved: false };
+            if (error instanceof Error) {
+                return { saved: false, message: error.message };
+            }
+            return { saved: false, message: 'Error actualizando documento' };
         }
     },
     generateUrl: async (filename: string) => {
         try {
-            const res = await CapacitorHttp
-                .post({
-                    url: `${API_URL}/file/presigned-url`,
-                    headers: {
-                        'Content-Type': 'application/json',
+            const res = await http
+                .post(`/file/presigned-url`, {
+                    json: {
+                        filename: filename
                     },
-                    data: { filename: filename },
                 });
-            return { success: true, message: res.data.url };
+            return { success: true, message: res.json() };
         } catch (error) {
             if (error instanceof Error) {
                 return { success: false, message: error.message };

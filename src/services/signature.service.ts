@@ -1,22 +1,21 @@
-import { CapacitorHttp } from "@capacitor/core";
 import { API_URL } from "../../config";
+import { http } from "./http";
 
 export const signatureService = {
-    save: async (ssc: string, svgFirma: string): Promise<{ saved: boolean }> => {
+    save: async (ssc: string, svgFirma: string): Promise<{ saved: boolean, message?: string }> => {
         try {
-            await CapacitorHttp
-                .patch({
-                    url: `${API_URL}/documentos/${ssc}`,
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    data: {
+            await http
+                .patch(`/documentos/${ssc}`, {
+                    json: {
                         svgFirma
                     },
                 });
             return { saved: true };
         } catch (error) {
-            return { saved: false };
+            if (error instanceof Error) {
+                return { saved: false, message: error.message };
+            }
+            return { saved: false, message: 'Error actualizando documento' };
         }
     }
 }
