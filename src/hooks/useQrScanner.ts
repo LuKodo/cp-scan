@@ -1,11 +1,27 @@
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { qrService } from '../services/scanner.service';
-import { useLocalStorage } from './useLocalStorage';
 import { Camera } from '@capacitor/camera';
+import { useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { toast } from '../utils/alert.utils';
 
 export const useQrScanner = () => {
-    const { setItem } = useLocalStorage();
+    useEffect(() => {
+        const checkAvailability = async () => {
+            if (Capacitor.getPlatform() === 'web') {
+                toast('BarcodeScanner no está disponible en web');
+                return;
+            }
 
+            try {
+                await import('@capacitor-mlkit/barcode-scanning');
+            } catch {
+                toast('Plugin BarcodeScanner no está instalado');
+            }
+        };
+
+        checkAvailability();
+    }, []);
     const scan = async (): Promise<{ message: string, success: boolean }> => {
         try {
             const permissionCamera = await Camera.checkPermissions();

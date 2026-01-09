@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { fileFromPath } from '../utils/image.utils';
 import { DocumentScanner } from '@capacitor-mlkit/document-scanner';
 import { documentService } from '../services/document.service';
 
