@@ -22,6 +22,13 @@ export function useDocumentScanner() {
                 return;
             }
 
+            if (!DocumentScanner.isGoogleDocumentScannerModuleAvailable()) {
+                setError('DocumentScanner no está disponible en este dispositivo');
+                return;
+            } else {
+                await DocumentScanner.installGoogleDocumentScannerModule();
+            }
+
             try {
                 await import('@capacitor-mlkit/document-scanner');
             } catch {

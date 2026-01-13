@@ -13,6 +13,13 @@ export const useQrScanner = () => {
                 return;
             }
 
+            if (!BarcodeScanner.isGoogleBarcodeScannerModuleAvailable()) {
+                toast('BarcodeScanner no está disponible en este dispositivo');
+                return;
+            } else {
+                await BarcodeScanner.installGoogleBarcodeScannerModule();
+            }
+
             try {
                 await import('@capacitor-mlkit/barcode-scanning');
             } catch {
