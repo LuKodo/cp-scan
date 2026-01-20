@@ -1,11 +1,12 @@
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { qrService } from '../services/scanner.service';
 import { Camera } from '@capacitor/camera';
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { toast } from '../utils/alert.utils';
 
 export const useQrScanner = () => {
+    const [loading, setLoading] = useState(false);
     useEffect(() => {
         const checkAvailability = async () => {
             if (Capacitor.getPlatform() === 'web') {
@@ -31,6 +32,7 @@ export const useQrScanner = () => {
     }, []);
     const scan = async (): Promise<{ message: string, success: boolean }> => {
         try {
+            setLoading(true);
             const permissionCamera = await Camera.checkPermissions();
             if (permissionCamera.camera !== 'granted') {
                 await Camera.requestPermissions();
@@ -56,10 +58,13 @@ export const useQrScanner = () => {
 
             return await processQr(value);
         } catch (error) {
+            console.log(error);
             if (error instanceof Error) {
                 return { message: error.message, success: false };
             }
             return { message: 'Ocurrió un error al escanear el QR', success: false };
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -77,6 +82,7 @@ export const useQrScanner = () => {
     };
 
     return {
-        scan
+        scan,
+        loading
     };
 };

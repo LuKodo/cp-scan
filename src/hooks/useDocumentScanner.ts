@@ -68,11 +68,10 @@ export function useDocumentScanner() {
         }
     };
 
-    const takePhoto = async (ssc: string): Promise<{ message: string; success: boolean }> => {
+    const takePhoto = async (ssc: string, type: string): Promise<{ message: string; success: boolean }> => {
         try {
             setLoading(true);
-            const presigned = await documentService.generateUrl(`formula-${ssc}.jpg`);
-            console.log(presigned);
+            const presigned = await documentService.generateUrl(`${type}-${ssc}.jpg`);
             if (!presigned.success) return presigned;
 
             const scanResult = await scanDocument();

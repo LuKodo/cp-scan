@@ -2,7 +2,7 @@ import { LoginResponse } from "../types";
 import { http } from "./http";
 
 export const authService = {
-    login: async (username: string, password: string): Promise<LoginResponse | Error> => {
+    login: async (username: string, password: string): Promise<LoginResponse> => {
         try {
             const body = {
                 name: username,
@@ -14,9 +14,9 @@ export const authService = {
             return response.json();
         } catch (e) {
             if (e instanceof Error) {
-                return e;
+                throw e;
             }
-            return new Error('An unknown error occurred');
+            throw new Error('An unknown error occurred');
         }
     }
 }

@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { clearSession, getSession, saveSession, Session } from './auth.service';
-import { LoginResponse } from '../types';
+import React, { createContext, useEffect, useState } from "react";
+import { clearSession, getSession, saveSession, Session } from "./auth.service";
+import { LoginResponse } from "../types";
 
 type AuthContextType = {
   session: Session | null;
@@ -22,6 +22,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = (token: LoginResponse) => {
+    if (!token.metodo_firma) {
+      throw new Error(
+          "No tienes un metodo de firma asociado, contacta con el administrador",
+      );
+    }
+
+    if (!token.sede) {
+      throw new Error(
+          "No tienes una sede asociada, contacta con el administrador",
+      );
+    }
     const s = saveSession(token);
     setSession(s);
   };

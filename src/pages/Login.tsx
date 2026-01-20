@@ -1,11 +1,12 @@
 import { IonImg, IonPage } from '@ionic/react';
 import { useEffect, useState } from 'react';
-import Logo from '../../resources/splash.png';
+import Logo from '../../resources/icon.png';
 import { useAuth } from '../hooks/useAuth';
 import { Redirect } from 'react-router';
 import { toast } from '../utils/alert.utils';
 import { LogIn, User, Lock } from 'lucide-react';
 import { authService } from '../services/auth.service';
+import Loader from '../components/Loader';
 
 const Login: React.FC = () => {
   const { login, session } = useAuth();
@@ -20,6 +21,8 @@ const Login: React.FC = () => {
     username: '',
     password: '',
   });
+  const [loading, setLoading] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   useEffect(() => {
     if (username === '') {
@@ -51,100 +54,87 @@ const Login: React.FC = () => {
     }
 
     try {
+      setLoading(true);
       const response = await authService.login(username, password);
-      console.log(response);
-      if (response instanceof Error) {
-        toast(response.message);
-        return;
-      }
+      setIsNavigating(true);
       login(response);
-    } catch (error) {
-      console.log(error);
-      toast('Ocurrió un error al iniciar sesión');
+    } catch (error: any) {
+      console.error(error);
+      toast(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <IonPage>
-      <div className="min-h-screen w-screen bg-gradient-purple-pink animate-gradient flex items-center justify-center p-4">
-        <div className="w-full max-w-md animate-fadeIn">
-          {/* Logo Container */}
-          <div className="flex justify-center mb-8 animate-slideUp">
-            <div className="w-48 h-48 bg-white rounded-full p-6 shadow-2xl">
-              <IonImg
-                src={Logo}
-                alt="CP Scan Logo"
-                className="w-full h-full object-contain"
-              />
-            </div>
-          </div>
-
+      {(loading || isNavigating) && <Loader fullScreen message={isNavigating ? "Cargando sesión..." : "Verificando credenciales..."} />}
+      <div className="min-h-screen w-screen bg-neutral-bg flex flex-col items-center justify-start sm:justify-center p-0 sm:p-4">
+        <IonImg src={Logo} alt="CP Scan Logo" className='w-[140px] h-[140px] mt-5' />
+        <div className="w-full max-w-md -mt-0 sm:mt-0 px-6">
           {/* Login Card */}
-          <div className="glass-dark rounded-3xl p-8 shadow-2xl backdrop-blur-xl">
-            <div className="text-center mb-8">
-              <h1 className="text-xl font-bold text-white mb-2">Bienvenido</h1>
-              <p className="text-purple-200 text-sm">Inicia sesión para continuar</p>
+          <div className="card-fancy p-6 sm:p-8">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-bold text-neutral-text tracking-widest mb-2">
+                CP SCAN</h2>
+              <p className="text-primary font-bold mt-2 uppercase tracking-widest text-xs">Captura de Documentos</p>
             </div>
 
-            <div className="space-y-5">
+            <div className="space-y-8">
               {/* Username Input */}
-              <div className="space-y-2">
-                <label className="text-white text-sm font-medium flex items-center gap-2">
-                  <User size={16} />
-                  Usuario
+              <div className="space-y-3">
+                <label className="text-neutral-muted text-xs font-black uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
+                  <User size={14} className="text-primary" />
+                  Nombre de usuario
                 </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Ingresa tu usuario"
-                    className="input-modern w-full px-4 py-2 rounded-xl bg-white/90 border-2 border-white/20 text-gray-800 placeholder-gray-400 focus:bg-white"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                  />
-                </div>
+                <input
+                  type="text"
+                  placeholder="ej. JuanPerez"
+                  className="input-fancy w-full"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                />
                 {formError.username !== '' && (
-                  <p className="text-red-300 text-sm font-medium animate-slideUp">
+                  <p className="text-red-500 text-xs font-extrabold ml-1 animate-fadeIn">
                     {formError.username}
                   </p>
                 )}
               </div>
 
               {/* Password Input */}
-              <div className="space-y-2 mt-4">
-                <label className="text-white text-sm font-medium flex items-center gap-2">
-                  <Lock size={16} />
+              <div className="space-y-3">
+                <label className="text-neutral-muted text-xs font-black uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
+                  <Lock size={14} className="text-primary" />
                   Contraseña
                 </label>
-                <div className="relative">
-                  <input
-                    type="password"
-                    placeholder="Ingresa tu contraseña"
-                    className="input-modern w-full px-4 py-2 rounded-xl bg-white/90 border-2 border-white/20 text-gray-800 placeholder-gray-400 focus:bg-white"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  className="input-fancy w-full"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
                 {formError.password !== '' && (
-                  <p className="text-red-300 text-sm font-medium animate-slideUp">
+                  <p className="text-red-500 text-xs font-extrabold ml-1 animate-fadeIn">
                     {formError.password}
                   </p>
                 )}
               </div>
 
               {/* Login Button */}
-              <span
-                className="bg-gradient-purple w-full p-1 rounded-xl font-bold text-lg shadow-xl hover:shadow-2xl flex items-center justify-center gap-2 mt-6 hover:bg-gradient-purple-blue text-white cursor-pointer"
+              <button
+                className="btn-solid w-full py-6 text-xl mt-6 active:scale-95"
                 onClick={handleLogin}
               >
-                <LogIn size={20} />
-                Iniciar sesión
-              </span>
+                <LogIn size={26} strokeWidth={3} />
+                <span>Acceder</span>
+              </button>
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="text-center mt-6">
-            <p className="text-white/80 text-sm">CP Scan © 2026</p>
+          {/* Footer Branding */}
+          <div className="text-center mt-16 pb-8 opacity-40">
+            <p className="text-neutral-text text-[11px] font-black uppercase tracking-[0.3em]">Distribuciones Pharmaser LTDA • 2026</p>
           </div>
         </div>
       </div>
