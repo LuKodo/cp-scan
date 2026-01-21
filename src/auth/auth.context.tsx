@@ -9,9 +9,13 @@ type AuthContextType = {
   loading: boolean;
 };
 
+type AuthProviderProps = {
+    children: React.ReactNode;
+};
+
 const AuthContext = createContext<AuthContextType>(null!);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
