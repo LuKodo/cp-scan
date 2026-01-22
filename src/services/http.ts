@@ -5,6 +5,5 @@ export const http = ky.create({
     retry: {
         limit: 2,
     },
-    timeout: 10000,
-    credentials: 'include',
+    timeout: 10000
 });
