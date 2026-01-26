@@ -9,16 +9,15 @@ import Loader from "../components/Loader";
 const CaptureSignature: React.FC = () => {
   const router = useIonRouter();
   const { paths, currentPath, handlers, actions, loading } = useSignatureCapture();
-  const [isNavigating, setIsNavigating] = useState(false);
 
   useEffect(() => {
+    console.log(loading ? 'true' : 'false');
     actions.clear();
   }, []);
 
   const handleSave = async () => {
     const result = await actions.save();
     if (result.saved) {
-      setIsNavigating(true);
       toast("Proceso completado");
       actions.clear();
       router.push("/step-1");
@@ -29,7 +28,7 @@ const CaptureSignature: React.FC = () => {
 
   return (
     <Layout>
-      {(loading || isNavigating) && <Loader fullScreen message={isNavigating ? "Guardando..." : "Procesando firma..."} />}
+      {loading && <Loader fullScreen message="Procesando firma..." />}
       <div className="w-full max-w-4xl space-y-8">
         <div className="card-fancy p-6 sm:p-8 bg-white border-2 border-primary-soft">
           <div className="bg-neutral-subtle border-4 border-white rounded-3xl shadow-inner overflow-hidden relative">
