@@ -5,7 +5,7 @@ import { useIonRouter, useIonViewWillEnter, useIonViewWillLeave } from '@ionic/r
 import { ScreenOrientation } from '@capacitor/screen-orientation';
 import { useDocumentCapture, useSignatureMethod, workflowService, documentService } from '../features';
 import { Layout, Loader, StepHeader, ActionButton, ProgressDots, Button } from '../shared';
-import { ROUTES, THEME } from '../core';
+import { ROUTES, THEME, FileUtils } from '../core';
 
 interface DocumentCapturePageProps {
   readonly mode?: 'document' | 'signature';
@@ -57,8 +57,11 @@ export const DocumentCapturePage = ({ mode = 'document' }: DocumentCapturePagePr
     setIsProcessing(true);
 
     try {
-      const type = isFormulaMode ? 'formula' : 'firma';
-      const result = await upload(workflow.ssc, type);
+      // Generar nombre de archivo único con fecha
+      const fileType = isFormulaMode ? 'formula' : 'firma';
+      const filename = FileUtils.generateUniqueFileName(workflow.ssc, fileType, 'jpg');
+      
+      const result = await upload(workflow.ssc, filename);
 
       if (!result.ok) {
         toast.error(result.error.message);
@@ -68,7 +71,7 @@ export const DocumentCapturePage = ({ mode = 'document' }: DocumentCapturePagePr
       // Avanzar paso en el workflow (las imágenes ya están en OCI)
       if (isFormulaMode) {
         // Guardar URL de la fórmula y avanzar
-        await workflowService.advanceToStep2(result.value.url);
+        await workflowService.advanceToStep2(filename);
         toast.success('Fórmula guardada');
         
         // Si ya existe firma, completar directamente sin pedir firma
@@ -94,7 +97,7 @@ export const DocumentCapturePage = ({ mode = 'document' }: DocumentCapturePagePr
         router.push(nextRoute);
       } else {
         // Es foto de firma - guardar URL y avanzar
-        await workflowService.advanceToStep3(result.value.url);
+        await workflowService.advanceToStep3(filename);
         
         // Completar workflow (insertar nueva línea en la base cloud)
         const completeResult = await workflowService.completeWorkflow();

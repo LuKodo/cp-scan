@@ -35,11 +35,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Inicialización - verificar sesión existente
   useEffect(() => {
     const initSession = async () => {
-      const result = await authService.getSession();
-      if (result.ok) {
-        setSession(result.value);
+      try {
+        const result = await authService.getSession();
+        if (result.ok) {
+          setSession(result.value);
+        }
+      } catch (e) {
+        console.error('Error inicializando sesión:', e);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     initSession();
@@ -56,17 +61,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setSession(result.value);
       } else {
         setError(result.error);
-        throw result.error; // Para que el componente pueda capturarlo
+        throw result.error;
       }
+    } catch (err) {
+      // Asegurar que el error se propague
+      const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+      console.error('Login error:', errorMessage);
+      throw err;
     } finally {
       setIsLoading(false);
     }
   }, []);
 
   const logout = useCallback(async () => {
-    await authService.logout();
-    setSession(null);
-    setError(null);
+    try {
+      await authService.logout();
+    } catch (e) {
+      console.error('Logout error:', e);
+    } finally {
+      setSession(null);
+      setError(null);
+    }
   }, []);
 
   const clearError = useCallback(() => {

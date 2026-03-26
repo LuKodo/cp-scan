@@ -1,6 +1,6 @@
 import { database, type WorkflowRecord } from '../../core/services/database.service';
 import { documentService } from '../document/document.service';
-import { OCIUtils } from '../../core/utils/oci.utils';
+import { FileUtils } from '../../core/utils/file.utils';
 import { AppError, Result } from '../../core/types/result';
 import type { QRData, Documento } from '../../core/types/domain';
 
@@ -70,20 +70,21 @@ class WorkflowService {
   }
 
   // Avanzar al paso 2 (fórmula capturada y subida a OCI)
-  async advanceToStep2(presignedUrl: string): Promise<Result<void, AppError>> {
+  async advanceToStep2(filename: string): Promise<Result<void, AppError>> {
     if (!this.currentWorkflow) {
       return Result.failure(AppError.validation('No hay workflow activo'));
     }
 
-    // Extraer el nombre del archivo de la URL presignada y construir la URL pública de OCI
-    const objectName = OCIUtils.getObjectNameFromUrl(presignedUrl) 
-      || `formula-${this.currentWorkflow.ssc}.jpg`;
-    const publicUrl = OCIUtils.getObjectUrl(objectName);
+    // Obtener URL pública desde la API
+    const urlResult = await documentService.getPublicUrl(filename);
+    if (!urlResult.ok) {
+      return Result.failure(urlResult.error);
+    }
 
     // Actualizar documento con URL pública de la fórmula
     const updatedDocumento = {
       ...this.currentWorkflow.documento,
-      url: publicUrl, // URL pública de OCI
+      url: urlResult.value, // URL pública desde la API
     };
 
     const record: WorkflowRecord = {
@@ -110,7 +111,7 @@ class WorkflowService {
   }
 
   // Avanzar al paso 3 (firma capturada y subida a OCI, o firma existente)
-  async advanceToStep3(presignedUrl: string | 'existing'): Promise<Result<void, AppError>> {
+  async advanceToStep3(filename: string | 'existing'): Promise<Result<void, AppError>> {
     if (!this.currentWorkflow) {
       return Result.failure(AppError.validation('No hay workflow activo'));
     }
@@ -118,19 +119,36 @@ class WorkflowService {
     // Actualizar documento con URL de la firma (si es nueva)
     let publicUrl: string;
     
-    if (presignedUrl === 'existing') {
-      // Usar la URL existente del documento
-      publicUrl = this.currentWorkflow.documento.url || OCIUtils.getObjectUrl(`firma-${this.currentWorkflow.ssc}.svg`);
+    if (filename === 'existing') {
+      // Usar la URL existente del documento o construir una con la fecha actual
+      const existingUrl = this.currentWorkflow.documento.url;
+      if (existingUrl && existingUrl.includes('firma-')) {
+        publicUrl = existingUrl;
+      } else {
+        // Generar nombre con fecha actual y obtener URL
+        const newFilename = FileUtils.generateUniqueFileName(
+          this.currentWorkflow.ssc, 
+          'firma', 
+          'svg'
+        );
+        const urlResult = await documentService.getPublicUrl(newFilename);
+        if (!urlResult.ok) {
+          return Result.failure(urlResult.error);
+        }
+        publicUrl = urlResult.value;
+      }
     } else {
-      // Extraer el nombre del archivo de la URL presignada y construir la URL pública
-      const objectName = OCIUtils.getObjectNameFromUrl(presignedUrl) 
-        || `firma-${this.currentWorkflow.ssc}.svg`;
-      publicUrl = OCIUtils.getObjectUrl(objectName);
+      // Obtener URL pública desde la API
+      const urlResult = await documentService.getPublicUrl(filename);
+      if (!urlResult.ok) {
+        return Result.failure(urlResult.error);
+      }
+      publicUrl = urlResult.value;
     }
 
     const updatedDocumento = {
       ...this.currentWorkflow.documento,
-      url: publicUrl, // URL pública de OCI
+      url: publicUrl, // URL pública desde la API
     };
 
     const record: WorkflowRecord = {

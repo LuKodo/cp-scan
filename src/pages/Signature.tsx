@@ -41,25 +41,28 @@ export const SignaturePage = () => {
     setIsProcessing(true);
 
     try {
-      // 1. Generar SVG
+      // 1. Nombre fijo para la firma (para poder verificar si existe)
+      const filename = `firma-${workflow.ssc}.svg`;
+
+      // 2. Generar SVG
       const svgString = generateSVG(paths);
 
-      // 2. Obtener URL presignada para subir el SVG
-      const urlResult = await documentService.generatePresignedUrl(`firma-${workflow.ssc}.svg`);
+      // 3. Obtener URL presignada para subir el SVG
+      const urlResult = await documentService.generatePresignedUrl(filename);
       if (!urlResult.ok) {
         toast.error('Error al generar URL para la firma');
         return;
       }
 
-      // 3. Subir SVG a OCI
+      // 4. Subir SVG a OCI
       const uploadResult = await documentService.uploadSVG(svgString, urlResult.value);
       if (!uploadResult.ok) {
         toast.error('Error al subir la firma');
         return;
       }
 
-      // 4. Guardar URL y avanzar a paso 3
-      await workflowService.advanceToStep3(urlResult.value);
+      // 5. Guardar URL y avanzar a paso 3
+      await workflowService.advanceToStep3(filename);
 
       // 5. Completar workflow (insertar nueva línea en la base cloud)
       const result = await workflowService.completeWorkflow();

@@ -24,3 +24,4 @@ export { AuthMapper, DocumentMapper } from './mappers';
 
 // Utils
 export { OCIUtils } from './utils/oci.utils';
+export { FileUtils } from './utils/file.utils';

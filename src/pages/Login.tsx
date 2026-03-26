@@ -40,12 +40,15 @@ export const LoginPage = () => {
     if (!validateForm()) return;
 
     try {
+      console.log('Iniciando login...');
       await login({ username, password });
+      console.log('Login exitoso, navegando...');
       toast.success('Bienvenido');
-      // Navegar explícitamente después del login exitoso
       router.push(ROUTES.STEP_1_QR, 'forward');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Error al iniciar sesión');
+      console.error('Error en login:', error);
+      const message = error instanceof Error ? error.message : 'Error al iniciar sesión';
+      toast.error(message);
     }
   }, [username, password, validateForm, login, router]);
 
@@ -66,7 +69,7 @@ export const LoginPage = () => {
   return (
     <IonPage>
       {isLoading && (
-        <Loader fullScreen message={isLoading ? "Verificando credenciales..." : "Cargando..."} />
+        <Loader fullScreen message="Verificando credenciales..." />
       )}
 
       <div style={{

@@ -20,5 +20,20 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, '')
       }
     }
-  }
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        codeSplitting: {
+          minSize: 20000,
+          groups: [
+            {
+              name: 'vendor',
+              test: /node_modules/,
+            },
+          ],
+        },
+      },
+    },
+  },
 })

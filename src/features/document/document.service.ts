@@ -4,7 +4,8 @@ import { CONFIG } from '../../core/config/app.config';
 import { DocumentMapper } from '../../core/mappers';
 import { http, uploadFile } from '../../core/services/http.service';
 import { AppError, Result, ErrorCode, type ServiceResponse } from '../../core/types/result';
-import type { Documento, PresignedUrl, DocumentoResponseDTO } from '../../core/types/domain';
+import type { Documento, DocumentoResponseDTO } from '../../core/types/domain';
+import type { PresignedUrl } from '../../core/types/domain';
 import type { ScanResult } from '../../core/types/domain';
 
 export interface DocumentValidationResult {
@@ -19,6 +20,7 @@ export interface DocumentService {
   getBySSC(ssc: string): ServiceResponse<Documento>;
   validateDocumentStatus(ssc: string): ServiceResponse<DocumentValidationResult>;
   generatePresignedUrl(filename: string): ServiceResponse<string>;
+  getPublicUrl(filename: string): ServiceResponse<string>;
   scanDocument(): ServiceResponse<ScanResult>;
   uploadImage(path: string, url: string): ServiceResponse<void>;
   uploadSVG(svg: string, url: string): ServiceResponse<void>;
@@ -92,10 +94,18 @@ class DocumentServiceImpl implements DocumentService {
   }
 
   // Verificar si la firma ya existe en OCI
+  // La firma siempre usa el nombre fijo: firma-{ssc}.svg
   private async checkSignatureExists(ssc: string): Promise<boolean> {
     try {
       const filename = `firma-${ssc}.svg`;
-      const response = await http.head(`file/view/${filename}`);
+      // Usar GET para obtener el filestream y verificar existencia
+      const result = await this.getPublicUrl(filename);
+      if (!result.ok) {
+        return false;
+      }
+      
+      // Verificar que el archivo existe haciendo una petición GET
+      const response = await fetch(result.value, { method: 'GET' });
       return response.ok;
     } catch {
       return false;
@@ -106,6 +116,17 @@ class DocumentServiceImpl implements DocumentService {
     const result = await http.post<PresignedUrl>('file/presigned-url', {
       json: { filename },
     });
+
+    if (!result.ok) {
+      return Result.failure(result.error);
+    }
+
+    return Result.success(result.value.url);
+  }
+
+  async getPublicUrl(filename: string): ServiceResponse<string> {
+    // Obtener URL pública desde la API
+    const result = await http.get<{ url: string }>(`file/view/${encodeURIComponent(filename)}`);
 
     if (!result.ok) {
       return Result.failure(result.error);

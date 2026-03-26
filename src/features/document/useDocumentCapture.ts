@@ -39,15 +39,13 @@ export function useDocumentCapture(): UseDocumentCaptureReturn {
   }, []);
 
   const upload = useCallback(
-    async (ssc: string, type: string): Promise<Result<UploadResult, AppError>> => {
+    async (ssc: string, filename: string): Promise<Result<UploadResult, AppError>> => {
       setIsUploading(true);
       setError(null);
 
       try {
         // Generar URL presignada
-        const urlResult = await documentService.generatePresignedUrl(
-          `${type}-${ssc}.jpg`
-        );
+        const urlResult = await documentService.generatePresignedUrl(filename);
         if (!urlResult.ok) {
           setError(urlResult.error);
           return urlResult;

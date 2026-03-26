@@ -11,13 +11,14 @@ export interface HttpClient {
   post<T>(url: string, options?: Options): Promise<T>;
   put<T>(url: string, options?: Options): Promise<T>;
   delete<T>(url: string, options?: Options): Promise<T>;
-  head(url: string, options?: Options): Promise<void>;
 }
 
 // Helper para mapear errores HTTP a AppError
 function mapHttpError(error: unknown): AppError {
+  console.error('HTTP Error:', error);
+  
   if (error instanceof HTTPError) {
-    const status = error.response.status;
+    const status = error.response?.status;
     
     switch (status) {
       case 401:
@@ -32,15 +33,18 @@ function mapHttpError(error: unknown): AppError {
       case 503:
         return AppError.network('Error del servidor');
       default:
-        return AppError.network(`Error HTTP ${status}`);
+        return AppError.network(`Error HTTP ${status || 'desconocido'}`);
     }
   }
   
   if (error instanceof Error) {
+    if (error.message.includes('timeout')) {
+      return AppError.network('Tiempo de espera agotado');
+    }
     return new AppError(error.message, ErrorCode.NETWORK_ERROR);
   }
   
-  return AppError.network('Error desconocido');
+  return AppError.network('Error de conexión');
 }
 
 // Implementación con Ky
@@ -51,9 +55,18 @@ class KyHttpClient implements HttpClient {
     this.client = ky.create({
       prefixUrl: CONFIG.API.BASE_URL,
       retry: {
-        limit: 2,
+        limit: 1,
+        methods: ['get'],
       },
-      timeout: CONFIG.API.TIMEOUT,
+      timeout: 15000, // 15 segundos de timeout
+      hooks: {
+        beforeError: [
+          (error) => {
+            console.error('Ky beforeError:', error);
+            return error;
+          }
+        ],
+      },
     });
   }
 
@@ -71,10 +84,6 @@ class KyHttpClient implements HttpClient {
 
   async delete<T>(url: string, options?: Options): Promise<T> {
     return this.client.delete(url, options).json<T>();
-  }
-
-  async head(url: string, options?: Options): Promise<void> {
-    return this.client.head(url, options).json<void>();
   }
 }
 
@@ -94,9 +103,6 @@ export const http = {
 
   delete: async <T>(url: string, options?: Options) => 
     Result.tryCatch<T>(() => httpClient.delete<T>(url, options), mapHttpError),
-
-  head: async (url: string, options?: Options) => 
-    Result.tryCatch<void>(() => httpClient.head(url, options), mapHttpError),
 };
 
 // Helper para subir archivos con Result
