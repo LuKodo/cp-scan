@@ -11,6 +11,7 @@ export interface HttpClient {
   post<T>(url: string, options?: Options): Promise<T>;
   put<T>(url: string, options?: Options): Promise<T>;
   delete<T>(url: string, options?: Options): Promise<T>;
+  head(url: string, options?: Options): Promise<Response>;
 }
 
 // Helper para mapear errores HTTP a AppError
@@ -85,6 +86,10 @@ class KyHttpClient implements HttpClient {
   async delete<T>(url: string, options?: Options): Promise<T> {
     return this.client.delete(url, options).json<T>();
   }
+
+  async head(url: string, options?: Options): Promise<Response> {
+    return this.client.head(url, options);
+  }
 }
 
 // Singleton instance
@@ -103,6 +108,9 @@ export const http = {
 
   delete: async <T>(url: string, options?: Options) => 
     Result.tryCatch<T>(() => httpClient.delete<T>(url, options), mapHttpError),
+
+  head: async (url: string, options?: Options) => 
+    Result.tryCatch<Response>(() => httpClient.head(url, options), mapHttpError),
 };
 
 // Helper para subir archivos con Result

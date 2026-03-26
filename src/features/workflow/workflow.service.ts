@@ -69,29 +69,17 @@ class WorkflowService {
     return Result.success(1);
   }
 
-  // Avanzar al paso 2 (fórmula capturada y subida a OCI)
-  async advanceToStep2(filename: string): Promise<Result<void, AppError>> {
+  // Avanzar al paso 2 (fórmula capturada)
+  async advanceToStep2(): Promise<Result<void, AppError>> {
     if (!this.currentWorkflow) {
       return Result.failure(AppError.validation('No hay workflow activo'));
     }
-
-    // Obtener URL pública desde la API
-    const urlResult = await documentService.getPublicUrl(filename);
-    if (!urlResult.ok) {
-      return Result.failure(urlResult.error);
-    }
-
-    // Actualizar documento con URL pública de la fórmula
-    const updatedDocumento = {
-      ...this.currentWorkflow.documento,
-      url: urlResult.value, // URL pública desde la API
-    };
 
     const record: WorkflowRecord = {
       ssc: this.currentWorkflow.ssc,
       currentStep: 2,
       status: 'in_progress',
-      documento: updatedDocumento,
+      documento: this.currentWorkflow.documento,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
@@ -104,58 +92,22 @@ class WorkflowService {
     this.currentWorkflow = {
       ...this.currentWorkflow,
       currentStep: 2,
-      documento: updatedDocumento,
     };
 
     return Result.success(undefined);
   }
 
-  // Avanzar al paso 3 (firma capturada y subida a OCI, o firma existente)
-  async advanceToStep3(filename: string | 'existing'): Promise<Result<void, AppError>> {
+  // Avanzar al paso 3 (firma capturada)
+  async advanceToStep3(): Promise<Result<void, AppError>> {
     if (!this.currentWorkflow) {
       return Result.failure(AppError.validation('No hay workflow activo'));
     }
-
-    // Actualizar documento con URL de la firma (si es nueva)
-    let publicUrl: string;
-    
-    if (filename === 'existing') {
-      // Usar la URL existente del documento o construir una con la fecha actual
-      const existingUrl = this.currentWorkflow.documento.url;
-      if (existingUrl && existingUrl.includes('firma-')) {
-        publicUrl = existingUrl;
-      } else {
-        // Generar nombre con fecha actual y obtener URL
-        const newFilename = FileUtils.generateUniqueFileName(
-          this.currentWorkflow.ssc, 
-          'firma', 
-          'svg'
-        );
-        const urlResult = await documentService.getPublicUrl(newFilename);
-        if (!urlResult.ok) {
-          return Result.failure(urlResult.error);
-        }
-        publicUrl = urlResult.value;
-      }
-    } else {
-      // Obtener URL pública desde la API
-      const urlResult = await documentService.getPublicUrl(filename);
-      if (!urlResult.ok) {
-        return Result.failure(urlResult.error);
-      }
-      publicUrl = urlResult.value;
-    }
-
-    const updatedDocumento = {
-      ...this.currentWorkflow.documento,
-      url: publicUrl, // URL pública desde la API
-    };
 
     const record: WorkflowRecord = {
       ssc: this.currentWorkflow.ssc,
       currentStep: 3,
       status: 'in_progress',
-      documento: updatedDocumento,
+      documento: this.currentWorkflow.documento,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
@@ -168,21 +120,18 @@ class WorkflowService {
     this.currentWorkflow = {
       ...this.currentWorkflow,
       currentStep: 3,
-      documento: updatedDocumento,
     };
 
     return Result.success(undefined);
   }
 
   // Completar workflow e insertar nueva línea en la base de datos cloud
-  // Esto aplica tanto para documentos nuevos como para entregas parciales
   async completeWorkflow(): Promise<Result<void, AppError>> {
     if (!this.currentWorkflow) {
       return Result.failure(AppError.validation('No hay workflow activo'));
     }
 
     // Insertar nueva línea del documento en el servidor cloud
-    // El backend debe manejar la inserción de la nueva línea
     const createResult = await documentService.create(this.currentWorkflow.documento);
     if (!createResult.ok) {
       return Result.failure(createResult.error);
@@ -208,6 +157,16 @@ class WorkflowService {
   // Obtener workflows pendientes
   async getPendingWorkflows(): Promise<Result<WorkflowRecord[], AppError>> {
     return database.getInProgressWorkflows();
+  }
+
+  // Generar nombre único para fórmula
+  generateFormulaFilename(ssc: string): string {
+    return FileUtils.generateUniqueFileName(ssc, 'formula', 'jpg');
+  }
+
+  // Generar nombre fijo para firma
+  generateSignatureFilename(ssc: string): string {
+    return `firma-${ssc}.svg`;
   }
 }
 

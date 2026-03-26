@@ -61,8 +61,8 @@ export const SignaturePage = () => {
         return;
       }
 
-      // 5. Guardar URL y avanzar a paso 3
-      await workflowService.advanceToStep3(filename);
+      // 5. Avanzar a paso 3
+      await workflowService.advanceToStep3();
 
       // 5. Completar workflow (insertar nueva línea en la base cloud)
       const result = await workflowService.completeWorkflow();

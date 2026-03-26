@@ -1,8 +1,8 @@
 import { DocumentScanner } from '@capacitor-mlkit/document-scanner';
 import { Capacitor } from '@capacitor/core';
 import { CONFIG } from '../../core/config/app.config';
-import { DocumentMapper } from '../../core/mappers';
 import { http, uploadFile } from '../../core/services/http.service';
+import { DocumentMapper } from '../../core/mappers';
 import { AppError, Result, ErrorCode, type ServiceResponse } from '../../core/types/result';
 import type { Documento, DocumentoResponseDTO } from '../../core/types/domain';
 import type { PresignedUrl } from '../../core/types/domain';
@@ -96,19 +96,38 @@ class DocumentServiceImpl implements DocumentService {
   // Verificar si la firma ya existe en OCI
   // La firma siempre usa el nombre fijo: firma-{ssc}.svg
   private async checkSignatureExists(ssc: string): Promise<boolean> {
+    const filename = `firma-${ssc}.svg`;
+    console.log(`Verificando si existe firma: ${filename}`);
+    
     try {
-      const filename = `firma-${ssc}.svg`;
-      // Usar GET para obtener el filestream y verificar existencia
-      const result = await this.getPublicUrl(filename);
-      if (!result.ok) {
-        return false;
+      // Hacer una petición HEAD al endpoint para verificar existencia sin descargar el archivo
+      const result = await http.head(`file/view/${encodeURIComponent(filename)}`);
+      
+      if (result.ok) {
+        console.log(`Firma existe: ${filename}`);
+        return true;
       }
       
-      // Verificar que el archivo existe haciendo una petición GET
-      const response = await fetch(result.value, { method: 'GET' });
-      return response.ok;
-    } catch {
+      console.log(`Firma no encontrada: ${filename}`);
       return false;
+    } catch (error) {
+      // Si el endpoint no soporta HEAD, intentar con GET pero sin procesar el body
+      try {
+        const response = await fetch(`${CONFIG.API.BASE_URL}/file/view/${encodeURIComponent(filename)}`, {
+          method: 'HEAD',
+        });
+        
+        if (response.ok || response.status === 200) {
+          console.log(`Firma existe (fetch): ${filename}`);
+          return true;
+        }
+        
+        console.log(`Firma no encontrada (fetch): ${filename}, status: ${response.status}`);
+        return false;
+      } catch (fetchError) {
+        console.error('Error verificando firma:', fetchError);
+        return false;
+      }
     }
   }
 

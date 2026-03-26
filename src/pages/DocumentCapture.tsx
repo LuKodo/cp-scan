@@ -25,9 +25,14 @@ export const DocumentCapturePage = ({ mode = 'document' }: DocumentCapturePagePr
     const checkExistingSignature = async () => {
       const workflow = workflowService.getCurrentWorkflow();
       if (workflow && isFormulaMode) {
+        console.log('Verificando firma existente para SSC:', workflow.ssc);
         const validation = await documentService.validateDocumentStatus(workflow.ssc);
+        console.log('Resultado validación firma:', validation);
         if (validation.ok && validation.value.hasSignature) {
+          console.log('Firma existente detectada');
           setHasExistingSignature(true);
+        } else {
+          console.log('No se detectó firma existente');
         }
       }
     };
@@ -70,14 +75,16 @@ export const DocumentCapturePage = ({ mode = 'document' }: DocumentCapturePagePr
 
       // Avanzar paso en el workflow (las imágenes ya están en OCI)
       if (isFormulaMode) {
-        // Guardar URL de la fórmula y avanzar
-        await workflowService.advanceToStep2(filename);
+        // Avanzar al paso 2
+        await workflowService.advanceToStep2();
         toast.success('Fórmula guardada');
         
         // Si ya existe firma, completar directamente sin pedir firma
+        console.log('handleCapture: hasExistingSignature =', hasExistingSignature);
         if (hasExistingSignature) {
+          console.log('Completando sin pedir firma...');
           toast.info('Documento ya tiene firma registrada - Completando');
-          await workflowService.advanceToStep3('existing');
+          await workflowService.advanceToStep3();
           
           const completeResult = await workflowService.completeWorkflow();
           if (!completeResult.ok) {
@@ -96,8 +103,8 @@ export const DocumentCapturePage = ({ mode = 'document' }: DocumentCapturePagePr
           : ROUTES.STEP_3_PICTURE;
         router.push(nextRoute);
       } else {
-        // Es foto de firma - guardar URL y avanzar
-        await workflowService.advanceToStep3(filename);
+        // Es foto de firma - avanzar al paso 3
+        await workflowService.advanceToStep3();
         
         // Completar workflow (insertar nueva línea en la base cloud)
         const completeResult = await workflowService.completeWorkflow();

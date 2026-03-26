@@ -70,6 +70,7 @@ export const QRScannerPage = () => {
     }
 
     const validation = validationResult.value;
+    console.log('Validación documento:', validation);
 
     // Si es ENTREGA TOTAL, no permitir continuar
     if (!validation.canProceed) {
@@ -86,6 +87,7 @@ export const QRScannerPage = () => {
 
     // Si ya tiene firma, solo capturar fórmula y completar
     if (validation.hasSignature) {
+      console.log('Documento ya tiene firma, se omitirá paso de firma');
       toast.info('Este documento ya tiene firma registrada. Solo se requiere la fórmula.');
     } else if (validation.estado === 'PARCIAL') {
       toast.info('Documento con entrega parcial - Continuando escaneo');
