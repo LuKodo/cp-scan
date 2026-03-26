@@ -9,7 +9,7 @@ export const CONFIG = {
   // API
   API: {
     BASE_URL: Capacitor.isNativePlatform()
-      ? 'http://192.168.1.88:8052'
+      ? 'https://api-mobile.pharmaser.com.co'//'http://192.168.1.88:8052'
       : '/api',
     TIMEOUT: 10_000,
     RETTRIES: 2,
