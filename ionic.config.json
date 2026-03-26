@@ -1,7 +1,11 @@
 {
   "name": "CP Scan",
   "integrations": {
-    "capacitor": {}
+    "capacitor": {
+      "android": {
+        "allowMixedContent": true
+      }
+    }
   },
   "type": "react-vite"
 }

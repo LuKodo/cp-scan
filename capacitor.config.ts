@@ -4,6 +4,9 @@ const config: CapacitorConfig = {
   appId: 'com.cpscan.app',
   appName: 'CP Scan',
   webDir: 'dist',
+  android: {
+    allowMixedContent: true
+  }
 };
 
 export default config;

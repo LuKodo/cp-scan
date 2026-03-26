@@ -1,145 +1,198 @@
-import { IonImg, IonPage } from '@ionic/react';
-import { useEffect, useState } from 'react';
-import Logo from '../../resources/icon.png';
-import { useAuth } from '../hooks/useAuth';
-import { Redirect } from 'react-router';
-import { toast } from '../utils/alert.utils';
-import { LogIn, User, Lock } from 'lucide-react';
-import { authService } from '../services/auth.service';
-import Loader from '../components/Loader';
+import { useState, useCallback } from 'react';
+import { IonPage } from '@ionic/react';
+import { User, Lock, ArrowRight } from 'lucide-react';
+import { useIonRouter } from '@ionic/react';
+import { toast } from 'sonner';
+import { useAuth } from '../features';
+import { Loader, Input, Button } from '../shared';
+import { THEME, ROUTES } from '../core';
 
-const Login: React.FC = () => {
-  const { login, session } = useAuth();
+interface FormErrors {
+  username?: string;
+  password?: string;
+}
 
-  if (session) {
-    return <Redirect to="/step-1" />;
-  }
-
+export const LoginPage = () => {
+  const router = useIonRouter();
+  const { login, isLoading } = useAuth();
+  
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [formError, setFormError] = useState({
-    username: '',
-    password: '',
-  });
-  const [loading, setLoading] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(false);
+  const [errors, setErrors] = useState<FormErrors>({});
 
-  useEffect(() => {
-    if (username === '') {
-      setFormError({
-        ...formError,
-        username: username === '' ? 'El usuario es requerido' : '',
-      });
+  const validateForm = useCallback((): boolean => {
+    const newErrors: FormErrors = {};
+
+    if (!username.trim()) {
+      newErrors.username = 'El usuario es requerido';
     }
-    if (password === '') {
-      setFormError({
-        ...formError,
-        password: password === '' ? 'La contraseña es requerida' : '',
-      });
+    if (!password.trim()) {
+      newErrors.password = 'La contraseña es requerida';
     }
-    setFormError({
-      username: '',
-      password: '',
-    });
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   }, [username, password]);
 
-  const handleLogin = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    if (username === '' || password === '') {
-      setFormError({
-        username: username === '' ? 'El usuario es requerido' : '',
-        password: password === '' ? 'La contraseña es requerida' : '',
-      });
-      return;
-    }
+
+    if (!validateForm()) return;
 
     try {
-      setLoading(true);
-      const response = await authService.login(username, password);
-      setIsNavigating(true);
-      login(response);
-    } catch (error: any) {
-      console.error(error);
-      toast(error.message);
-    } finally {
-      setLoading(false);
+      await login({ username, password });
+      toast.success('Bienvenido');
+      // Navegar explícitamente después del login exitoso
+      router.push(ROUTES.STEP_1_QR, 'forward');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Error al iniciar sesión');
     }
-  };
+  }, [username, password, validateForm, login, router]);
+
+  const handleUsernameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setUsername(e.target.value);
+    if (errors.username) {
+      setErrors(prev => ({ ...prev, username: undefined }));
+    }
+  }, [errors.username]);
+
+  const handlePasswordChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+    if (errors.password) {
+      setErrors(prev => ({ ...prev, password: undefined }));
+    }
+  }, [errors.password]);
 
   return (
     <IonPage>
-      {(loading || isNavigating) && <Loader fullScreen message={isNavigating ? "Cargando sesión..." : "Verificando credenciales..."} />}
-      <div className="min-h-screen w-screen bg-neutral-bg flex flex-col items-center justify-start sm:justify-center p-0 sm:p-4">
-        <IonImg src={Logo} alt="CP Scan Logo" className='w-[140px] h-[140px] mt-5' />
-        <div className="w-full max-w-md -mt-0 sm:mt-0 px-6">
-          {/* Login Card */}
-          <div className="card-fancy p-6 sm:p-8">
-            <div className="text-center mb-10">
-              <h2 className="text-3xl font-bold text-neutral-text tracking-widest mb-2">
-                CP SCAN</h2>
-              <p className="text-primary font-bold mt-2 uppercase tracking-widest text-xs">Captura de Documentos</p>
-            </div>
+      {isLoading && (
+        <Loader fullScreen message={isLoading ? "Verificando credenciales..." : "Cargando..."} />
+      )}
 
-            <div className="space-y-8">
-              {/* Username Input */}
-              <div className="space-y-3">
-                <label className="text-neutral-muted text-xs font-black uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
-                  <User size={14} className="text-primary" />
-                  Nombre de usuario
-                </label>
-                <input
-                  type="text"
-                  placeholder="ej. JuanPerez"
-                  className="input-fancy w-full"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                />
-                {formError.username !== '' && (
-                  <p className="text-red-500 text-xs font-extrabold ml-1 animate-fadeIn">
-                    {formError.username}
-                  </p>
-                )}
-              </div>
+      <div style={{
+        minHeight: '100vh',
+        width: '100%',
+        background: `linear-gradient(135deg, ${THEME.colors.background} 0%, ${THEME.colors.backgroundGradient} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        {/* Decorative shapes */}
+        <DecorativeShape top="-60px" right="-40px" size={200} color={THEME.colors.accent} rotation={15} />
+        <DecorativeShape top="40px" right="100px" size={80} color={THEME.colors.secondary} rotation={-10} />
 
-              {/* Password Input */}
-              <div className="space-y-3">
-                <label className="text-neutral-muted text-xs font-black uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
-                  <Lock size={14} className="text-primary" />
-                  Contraseña
-                </label>
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  className="input-fancy w-full"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                {formError.password !== '' && (
-                  <p className="text-red-500 text-xs font-extrabold ml-1 animate-fadeIn">
-                    {formError.password}
-                  </p>
-                )}
-              </div>
-
-              {/* Login Button */}
-              <button
-                className="btn-solid w-full py-6 text-xl mt-6 active:scale-95"
-                onClick={handleLogin}
-              >
-                <LogIn size={26} strokeWidth={3} />
-                <span>Acceder</span>
-              </button>
-            </div>
+        {/* Main Content */}
+        <div style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          padding: '40px 32px',
+          position: 'relative',
+          zIndex: 1,
+        }}>
+          {/* Logo */}
+          <div style={{ marginBottom: '48px' }}>
+            <h1 style={{
+              fontSize: '40px',
+              fontWeight: 700,
+              color: THEME.colors.primary,
+            }}>CP Scan</h1>
           </div>
 
-          {/* Footer Branding */}
-          <div className="text-center mt-16 pb-8 opacity-40">
-            <p className="text-neutral-text text-[11px] font-black uppercase tracking-[0.3em]">Distribuciones Pharmaser LTDA • 2026</p>
+          {/* Header */}
+          <div style={{ marginBottom: '40px' }}>
+            <h1 style={{
+              fontSize: '32px',
+              fontWeight: 700,
+              color: THEME.colors.primary,
+              marginBottom: '8px',
+              letterSpacing: '-0.5px',
+            }}>
+              Bienvenido
+            </h1>
+            <p style={{
+              fontSize: '16px',
+              color: THEME.colors.text.secondary,
+              lineHeight: 1.5,
+            }}>
+              Ingresa tus credenciales para continuar
+            </p>
           </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <Input
+              label="Usuario"
+              type="text"
+              placeholder="Ingresa tu usuario"
+              value={username}
+              onChange={handleUsernameChange}
+              leftIcon={<User size={20} />}
+              error={errors.username}
+              disabled={isLoading}
+            />
+
+            <Input
+              label="Contraseña"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={handlePasswordChange}
+              leftIcon={<Lock size={20} />}
+              error={errors.password}
+              disabled={isLoading}
+            />
+
+            <Button
+              type="submit"
+              isLoading={isLoading}
+              rightIcon={<ArrowRight size={20} />}
+              style={{ marginTop: '12px' }}
+            >
+              Ingresar
+            </Button>
+          </form>
+        </div>
+
+        {/* Footer */}
+        <div style={{
+          padding: '24px 32px',
+          textAlign: 'center',
+        }}>
+          <p style={{
+            fontSize: '12px',
+            color: 'rgba(5, 63, 92, 0.35)',
+            fontWeight: 500,
+          }}>
+            Distribuciones Pharmaser LTDA © 2026
+          </p>
         </div>
       </div>
     </IonPage>
   );
 };
 
-export default Login;
+// Subcomponente para formas decorativas
+interface DecorativeShapeProps {
+  top: string;
+  right: string;
+  size: number;
+  color: string;
+  rotation: number;
+}
+
+const DecorativeShape = ({ top, right, size, color, rotation }: DecorativeShapeProps) => (
+  <div style={{
+    position: 'absolute',
+    top,
+    right,
+    width: size,
+    height: size,
+    backgroundColor: color,
+    borderRadius: '40px',
+    transform: `rotate(${rotation}deg)`,
+    opacity: 0.9,
+  }} />
+);
