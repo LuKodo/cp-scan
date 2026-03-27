@@ -2,7 +2,6 @@ import { useState, useCallback } from 'react';
 import { IonPage } from '@ionic/react';
 import { User, Lock, ArrowRight } from 'lucide-react';
 import { useIonRouter } from '@ionic/react';
-import { toast } from 'sonner';
 import { useAuth } from '../features';
 import { Loader, Input, Button } from '../shared';
 import { THEME, ROUTES } from '../core';
@@ -40,15 +39,10 @@ export const LoginPage = () => {
     if (!validateForm()) return;
 
     try {
-      console.log('Iniciando login...');
       await login({ username, password });
-      console.log('Login exitoso, navegando...');
-      toast.success('Bienvenido');
       router.push(ROUTES.STEP_1_QR, 'forward');
     } catch (error) {
-      console.error('Error en login:', error);
-      const message = error instanceof Error ? error.message : 'Error al iniciar sesión';
-      toast.error(message);
+      // Error silencioso - el componente Input muestra el error de validación
     }
   }, [username, password, validateForm, login, router]);
 

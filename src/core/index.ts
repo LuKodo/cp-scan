@@ -7,6 +7,7 @@ export type {
   ServiceResponse 
 } from './types/result';
 export type * from './types/domain';
+export type { WorkflowFlags } from './types/domain';
 
 // Config
 export { CONFIG, THEME, ROUTES } from './config/app.config';

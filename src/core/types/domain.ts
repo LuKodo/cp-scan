@@ -16,7 +16,7 @@ export interface Session {
   readonly expiresAt: number;
 }
 
-export type SignatureMethod = 'FIRMA' | 'FOTO';
+export type SignatureMethod = 'FIRMA' | 'FOTO' | 'SOLOFORMULA';
 
 export interface LoginCredentials {
   readonly username: string;
@@ -57,6 +57,12 @@ export interface QRData {
   readonly facturaCuota: string;
   readonly fechaDispensacion: string;
   readonly estado?: string;
+}
+
+// Flags del workflow calculados al escanear QR
+export interface WorkflowFlags {
+  readonly skipSignature: boolean;  // true si hasSignature=true o modo SOLOFORMULA
+  readonly totalSteps: 2 | 3;       // 2 para SOLOFORMULA/hasSignature, 3 para normal
 }
 
 // ============ Scanner Domain ============

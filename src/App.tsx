@@ -69,8 +69,7 @@ const App = memo(() => {
   return (
     <IonApp>
       <AuthProvider>
-        <AppContent />
-        
+        <AppContent />        
         <Toaster
           position="top-center"
           toastOptions={{

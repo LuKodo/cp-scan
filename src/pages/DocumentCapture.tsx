@@ -1,9 +1,8 @@
 import { useCallback, useState, useEffect } from 'react';
-import { Camera, ArrowLeft, FileText, Signature } from 'lucide-react';
-import { toast } from 'sonner';
+import { Camera, ArrowLeft, FileText, Signature, CheckCircle } from 'lucide-react';
 import { useIonRouter, useIonViewWillEnter, useIonViewWillLeave } from '@ionic/react';
 import { ScreenOrientation } from '@capacitor/screen-orientation';
-import { useDocumentCapture, useSignatureMethod, workflowService, documentService } from '../features';
+import { useDocumentCapture, workflowService, documentService } from '../features';
 import { Layout, Loader, StepHeader, ActionButton, ProgressDots, Button } from '../shared';
 import { ROUTES, THEME, FileUtils } from '../core';
 
@@ -13,31 +12,36 @@ interface DocumentCapturePageProps {
 
 export const DocumentCapturePage = ({ mode = 'document' }: DocumentCapturePageProps) => {
   const router = useIonRouter();
-  const signatureMethod = useSignatureMethod();
   const { upload, isScanning, isUploading } = useDocumentCapture();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [hasExistingSignature, setHasExistingSignature] = useState(false);
+  const [isReady, setIsReady] = useState(false);
 
   const isFormulaMode = mode === 'document';
 
-  // Verificar si ya existe firma al cargar
+  // Verificar workflow al montar el componente
   useEffect(() => {
-    const checkExistingSignature = async () => {
-      const workflow = workflowService.getCurrentWorkflow();
-      if (workflow && isFormulaMode) {
-        console.log('Verificando firma existente para SSC:', workflow.ssc);
-        const validation = await documentService.validateDocumentStatus(workflow.ssc);
-        console.log('Resultado validación firma:', validation);
-        if (validation.ok && validation.value.hasSignature) {
-          console.log('Firma existente detectada');
-          setHasExistingSignature(true);
-        } else {
-          console.log('No se detectó firma existente');
-        }
-      }
-    };
-    checkExistingSignature();
-  }, [isFormulaMode]);
+    const workflow = workflowService.getCurrentWorkflow();
+    if (!workflow) {
+      // Si no hay workflow, redirigir al inicio después de un breve delay
+      // para evitar problemas de navegación durante el montaje
+      const timeout = setTimeout(() => {
+        router.push(ROUTES.STEP_1_QR, 'back');
+      }, 100);
+      return () => clearTimeout(timeout);
+    } else {
+      setIsReady(true);
+    }
+  }, [router]);
+
+  // Obtener datos del workflow
+  const workflow = workflowService.getCurrentWorkflow();
+  const flags = workflow?.flags;
+  const signatureMethod = workflow?.signatureMethod;
+  
+  // Determinar si debemos saltar la firma
+  const skipSignature = flags?.skipSignature ?? false;
+  const totalSteps = flags?.totalSteps ?? 3;
+  
   const title = isFormulaMode ? 'Capturar Fórmula' : 'Capturar Firma';
   const Icon = isFormulaMode ? FileText : Signature;
   const step = isFormulaMode ? 2 : 3;
@@ -52,10 +56,9 @@ export const DocumentCapturePage = ({ mode = 'document' }: DocumentCapturePagePr
   });
 
   const handleCapture = useCallback(async () => {
-    const workflow = workflowService.getCurrentWorkflow();
-    if (!workflow) {
-      toast.error('No hay sesión de escaneo activa');
-      router.push(ROUTES.STEP_1_QR);
+    const currentWorkflow = workflowService.getCurrentWorkflow();
+    if (!currentWorkflow) {
+      router.push(ROUTES.STEP_1_QR, 'back');
       return;
     }
 
@@ -64,68 +67,69 @@ export const DocumentCapturePage = ({ mode = 'document' }: DocumentCapturePagePr
     try {
       // Generar nombre de archivo único con fecha
       const fileType = isFormulaMode ? 'formula' : 'firma';
-      const filename = FileUtils.generateUniqueFileName(workflow.ssc, fileType, 'jpg');
+      const filename = FileUtils.generateUniqueFileName(currentWorkflow.ssc, fileType, 'jpg');
       
-      const result = await upload(workflow.ssc, filename);
+      const result = await upload(currentWorkflow.ssc, filename);
 
       if (!result.ok) {
-        toast.error(result.error.message);
         return;
       }
 
-      // Avanzar paso en el workflow (las imágenes ya están en OCI)
       if (isFormulaMode) {
         // Avanzar al paso 2
         await workflowService.advanceToStep2();
-        toast.success('Fórmula guardada');
         
-        // Si ya existe firma, completar directamente sin pedir firma
-        console.log('handleCapture: hasExistingSignature =', hasExistingSignature);
-        if (hasExistingSignature) {
-          console.log('Completando sin pedir firma...');
-          toast.info('Documento ya tiene firma registrada - Completando');
+        // Si debemos saltar la firma (SOLOFORMULA o hasSignature), completar directamente
+        if (skipSignature) {
+          // Avanzar al paso 3 (lógicamente, aunque no mostramos UI)
           await workflowService.advanceToStep3();
           
+          // Completar workflow
           const completeResult = await workflowService.completeWorkflow();
           if (!completeResult.ok) {
-            toast.error(completeResult.error.message);
             return;
           }
           
-          toast.success('Documento sincronizado correctamente');
           router.push(ROUTES.STEP_1_QR);
           return;
         }
         
         // Navegar según el método de firma del usuario
-        const nextRoute = signatureMethod === 'FIRMA' 
-          ? ROUTES.STEP_3_SIGNATURE 
-          : ROUTES.STEP_3_PICTURE;
+        const nextRoute = signatureMethod === 'FOTO' 
+          ? ROUTES.STEP_3_PICTURE 
+          : ROUTES.STEP_3_SIGNATURE;
         router.push(nextRoute);
       } else {
         // Es foto de firma - avanzar al paso 3
         await workflowService.advanceToStep3();
         
-        // Completar workflow (insertar nueva línea en la base cloud)
+        // Completar workflow
         const completeResult = await workflowService.completeWorkflow();
         if (!completeResult.ok) {
-          toast.error(completeResult.error.message);
           return;
         }
         
-        toast.success('Escaneo completado y sincronizado');
         router.push(ROUTES.STEP_1_QR);
       }
     } finally {
       setIsProcessing(false);
     }
-  }, [isFormulaMode, upload, signatureMethod, router]);
+  }, [isFormulaMode, upload, signatureMethod, router, skipSignature]);
 
   const handleBack = useCallback(() => {
-    router.push(ROUTES.STEP_1_QR);
+    router.push(ROUTES.STEP_1_QR, 'back');
   }, [router]);
 
   const isLoading = isScanning || isUploading || isProcessing;
+
+  // Mostrar loader mientras verificamos el workflow
+  if (!isReady || !workflow) {
+    return (
+      <Layout>
+        <Loader fullScreen message="Cargando..." />
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -139,7 +143,7 @@ export const DocumentCapturePage = ({ mode = 'document' }: DocumentCapturePagePr
           icon={Icon}
           title={title}
           step={step}
-          totalSteps={3}
+          totalSteps={totalSteps}
         />
 
         <ActionButton
@@ -161,6 +165,31 @@ export const DocumentCapturePage = ({ mode = 'document' }: DocumentCapturePagePr
           Volver
         </Button>
 
+        {/* Info banner para modo sin firma */}
+        {isFormulaMode && skipSignature && (
+          <div style={{
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            border: '1px solid rgba(16, 185, 129, 0.3)',
+            borderRadius: '12px',
+            padding: '12px 16px',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+          }}>
+            <CheckCircle size={20} color={THEME.colors.success} />
+            <span style={{
+              fontSize: '14px',
+              color: THEME.colors.success,
+              fontWeight: 500,
+            }}>
+              {signatureMethod === 'SOLOFORMULA' 
+                ? 'Modo Solo Fórmula: Se completará al guardar' 
+                : 'Este documento ya tiene firma: Se completará al guardar'}
+            </span>
+          </div>
+        )}
+
         {/* Tips */}
         <div style={{
           backgroundColor: THEME.colors.white,
@@ -181,7 +210,7 @@ export const DocumentCapturePage = ({ mode = 'document' }: DocumentCapturePagePr
 
         {/* Progress */}
         <div style={{ marginTop: '32px' }}>
-          <ProgressDots total={3} current={step} />
+          <ProgressDots total={totalSteps} current={step} />
         </div>
       </div>
     </Layout>

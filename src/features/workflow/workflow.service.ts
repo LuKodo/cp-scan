@@ -2,7 +2,7 @@ import { database, type WorkflowRecord } from '../../core/services/database.serv
 import { documentService } from '../document/document.service';
 import { FileUtils } from '../../core/utils/file.utils';
 import { AppError, Result } from '../../core/types/result';
-import type { QRData, Documento } from '../../core/types/domain';
+import type { QRData, Documento, SignatureMethod, WorkflowFlags } from '../../core/types/domain';
 
 export type WorkflowStep = 1 | 2 | 3;
 
@@ -11,6 +11,8 @@ export interface WorkflowState {
   readonly currentStep: WorkflowStep;
   readonly qrData: QRData;
   readonly documento: Documento;
+  readonly signatureMethod: SignatureMethod;
+  readonly flags: WorkflowFlags;  // Calculado al inicio basado en hasSignature y modo
 }
 
 class WorkflowService {
@@ -21,7 +23,12 @@ class WorkflowService {
   }
 
   // Iniciar o recuperar un workflow
-  async startWorkflow(qrData: QRData, documento: Documento): Promise<Result<WorkflowStep, AppError>> {
+  async startWorkflow(
+    qrData: QRData, 
+    documento: Documento, 
+    signatureMethod: SignatureMethod,
+    hasExistingSignature: boolean
+  ): Promise<Result<WorkflowStep, AppError>> {
     // Verificar si ya existe un workflow en progreso para este SSC
     const existingResult = await database.getWorkflow(qrData.ssc);
     
@@ -31,13 +38,25 @@ class WorkflowService {
 
     const existing = existingResult.value;
 
+    // Calcular flags basado en modo y estado del documento
+    const isSoloFormula = signatureMethod === 'SOLOFORMULA';
+    const skipSignature = isSoloFormula || hasExistingSignature;
+    const totalSteps = skipSignature ? 2 : 3;
+
+    const flags: WorkflowFlags = {
+      skipSignature,
+      totalSteps,
+    };
+
     if (existing && existing.status === 'in_progress') {
-      // Recuperar workflow existente
+      // Recuperar workflow existente (preservar flags originales si existen)
       this.currentWorkflow = {
         ssc: existing.ssc,
         currentStep: existing.currentStep as WorkflowStep,
         qrData,
         documento: existing.documento as Documento,
+        signatureMethod,
+        flags: (existing as unknown as { flags?: WorkflowFlags }).flags ?? flags,
       };
 
       return Result.success(existing.currentStep as WorkflowStep);
@@ -64,6 +83,8 @@ class WorkflowService {
       currentStep: 1,
       qrData,
       documento,
+      signatureMethod,
+      flags,
     };
 
     return Result.success(1);

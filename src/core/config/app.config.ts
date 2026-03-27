@@ -9,8 +9,8 @@ export const CONFIG = {
   // API
   API: {
     BASE_URL: Capacitor.isNativePlatform()
-      ? 'https://api-mobile.pharmaser.com.co'//'http://192.168.1.88:8052'
-      : '/api',
+      ? 'http://192.168.3.181:8052'//'https://api-mobile.pharmaser.com.co'//'http://192.168.1.88:8052'
+      : 'http://192.168.3.181:8052',
     TIMEOUT: 10_000,
     RETTRIES: 2,
   },
@@ -69,14 +69,14 @@ export const CONFIG = {
 
 // Tipos derivados de config (para type safety)
 export type DocumentType = 'formula' | 'firma';
-export type SignatureMethod = 'FIRMA' | 'FOTO';
+export type SignatureMethod = 'FIRMA' | 'FOTO' | 'SOLOFORMULA';
 
 // Colores del tema - Design Tokens
 export const THEME = {
   colors: {
     primary: '#053F5C',
     accent: '#429EBD',
-    secondary: '#45a9db',
+    secondary: '#fbab43',
     light: '#9FE7F5',
     background: '#F8FAFB',
     backgroundGradient: '#E8F4F8',

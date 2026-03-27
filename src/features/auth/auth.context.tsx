@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import { authService } from './auth.service';
-import type { Session, User, LoginCredentials } from '../../core/types/domain';
+import type { Session, User, LoginCredentials, SignatureMethod } from '../../core/types/domain';
 import type { AppError } from '../../core/types/result';
 
 // ============ Estado del contexto ============
@@ -126,7 +126,7 @@ export const useIsAuthenticated = (): boolean => {
   return session !== null;
 };
 
-export const useSignatureMethod = (): 'FIRMA' | 'FOTO' | null => {
+export const useSignatureMethod = (): SignatureMethod | null => {
   const user = useAuthUser();
   return user?.metodoFirma ?? null;
 };

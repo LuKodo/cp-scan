@@ -1,4 +1,4 @@
-import type { User, Session, LoginResponseDTO } from '../types/domain';
+import type { User, Session, LoginResponseDTO, SignatureMethod } from '../types/domain';
 
 export const AuthMapper = {
   toUser(dto: LoginResponseDTO): User {
@@ -6,7 +6,7 @@ export const AuthMapper = {
       id: dto.id,
       name: dto.name,
       sede: dto.sede,
-      metodoFirma: dto.metodo_firma as 'FIRMA' | 'FOTO',
+      metodoFirma: dto.metodo_firma as SignatureMethod,
     };
   },
 
