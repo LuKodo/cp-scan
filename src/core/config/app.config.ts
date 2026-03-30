@@ -1,16 +1,11 @@
-import { Capacitor } from '@capacitor/core';
-
 /**
  * Configuración centralizada de la aplicación
- * Toda configuración debe venir de aquí - no magic strings/numbers
  */
 
 export const CONFIG = {
   // API
   API: {
-    BASE_URL: Capacitor.isNativePlatform()
-      ? 'http://192.168.3.181:8052'//'https://api-mobile.pharmaser.com.co'//'http://192.168.1.88:8052'
-      : 'http://192.168.3.181:8052',
+    BASE_URL: 'https://api-mobile.pharmaser.com.co', //'http://192.168.1.88:8052'
     TIMEOUT: 10_000,
     RETTRIES: 2,
   },

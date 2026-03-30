@@ -7,7 +7,7 @@ import { AuthProvider, workflowService } from './features';
 import { ROUTES, THEME } from './core';
 
 // Pages
-import { LoginPage } from './pages';
+import { LoginPage, UpdateChecker } from './pages';
 import { QRScannerPage } from './pages';
 import { DocumentCapturePage } from './pages';
 import { SignaturePage } from './pages';
@@ -67,25 +67,27 @@ AppContent.displayName = 'AppContent';
 
 const App = memo(() => {
   return (
-    <IonApp>
-      <AuthProvider>
-        <AppContent />        
-        <Toaster
-          position="top-center"
-          toastOptions={{
-            style: {
-              background: THEME.colors.primary,
-              color: THEME.colors.white,
-              border: 'none',
-              borderRadius: '16px',
-              padding: '16px 20px',
-              fontSize: '14px',
-              fontWeight: 500,
-            },
-          }}
-        />
-      </AuthProvider>
-    </IonApp>
+    <UpdateChecker>
+      <IonApp>
+        <AuthProvider>
+          <AppContent />
+          <Toaster
+            position="top-center"
+            toastOptions={{
+              style: {
+                background: THEME.colors.primary,
+                color: THEME.colors.white,
+                border: 'none',
+                borderRadius: '16px',
+                padding: '16px 20px',
+                fontSize: '14px',
+                fontWeight: 500,
+              },
+            }}
+          />
+        </AuthProvider>
+      </IonApp>
+    </UpdateChecker>
   );
 });
 

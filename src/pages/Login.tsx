@@ -1,10 +1,11 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { IonPage } from '@ionic/react';
 import { User, Lock, ArrowRight } from 'lucide-react';
 import { useIonRouter } from '@ionic/react';
 import { useAuth } from '../features';
 import { Loader, Input, Button } from '../shared';
 import { THEME, ROUTES } from '../core';
+import { App } from '@capacitor/app';
 
 interface FormErrors {
   username?: string;
@@ -14,7 +15,17 @@ interface FormErrors {
 export const LoginPage = () => {
   const router = useIonRouter();
   const { login, isLoading } = useAuth();
-  
+  const [version, setVersion] = useState('');
+
+  useEffect(() => {
+    getVersion().then(setVersion);
+  }, []);
+
+  const getVersion = async () => {
+    const info = await App.getInfo();
+    return info.version;
+  };
+
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
@@ -164,6 +175,13 @@ export const LoginPage = () => {
             fontWeight: 500,
           }}>
             Distribuciones Pharmaser LTDA © 2026
+          </p>
+          <p style={{
+            fontSize: '12px',
+            color: 'rgba(5, 63, 92, 0.35)',
+            fontWeight: 500,
+          }}>
+            Versión {version || '1.0.0'}
           </p>
         </div>
       </div>

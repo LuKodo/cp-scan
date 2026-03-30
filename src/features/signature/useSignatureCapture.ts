@@ -1,7 +1,7 @@
 import { useCallback, useState, useRef } from 'react';
 import { signatureService } from './signature.service';
 import { AppError, Result } from '../../core/types/result';
-import type { Point, SignaturePath } from './signature.types';
+import type { Point } from './signature.types';
 
 interface UseSignatureCaptureOptions {
   readonly onSave?: () => void;
@@ -16,7 +16,7 @@ interface UseSignatureCaptureReturn {
   readonly isSaving: boolean;
   readonly hasSignature: boolean;
   readonly error: AppError | null;
-  
+
   // Handlers
   readonly startDrawing: (point: Point) => void;
   readonly moveDrawing: (point: Point) => void;
@@ -47,7 +47,7 @@ export function useSignatureCapture(
 
   const endDrawing = useCallback(() => {
     if (!isDrawingRef.current || !currentPath) return;
-    
+
     isDrawingRef.current = false;
     setPaths((prev) => [...prev, currentPath]);
     setCurrentPath(null);
