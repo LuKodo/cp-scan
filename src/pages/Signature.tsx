@@ -3,7 +3,7 @@ import { Save, Eraser, Signature as SignatureIcon } from 'lucide-react';
 import { useIonRouter, useIonViewWillEnter, useIonViewWillLeave } from '@ionic/react';
 import { ScreenOrientation } from '@capacitor/screen-orientation';
 import { useSignatureCapture, workflowService, documentService } from '../features';
-import { Layout, Loader, StepHeader, Button, ProgressDots } from '../shared';
+import { Layout, Loader, Button, ProgressDots } from '../shared';
 import { THEME, ROUTES } from '../core';
 
 export const SignaturePage = () => {
@@ -50,16 +50,21 @@ export const SignaturePage = () => {
     const updateSize = () => {
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
+        // Usar el tamaño real del contenedor para el canvas
         setCanvasSize({
-          width: Math.max(rect.width, 600),
-          height: Math.max(rect.height, 300),
+          width: Math.floor(rect.width),
+          height: Math.floor(rect.height),
         });
       }
     };
 
-    updateSize();
+    // Pequeño delay para asegurar que el DOM está listo
+    const timeout = setTimeout(updateSize, 100);
     window.addEventListener('resize', updateSize);
-    return () => window.removeEventListener('resize', updateSize);
+    return () => {
+      clearTimeout(timeout);
+      window.removeEventListener('resize', updateSize);
+    };
   }, []);
 
   // Bloquear orientación en landscape para firma
@@ -140,18 +145,29 @@ export const SignaturePage = () => {
     <Layout>
       {isLoading && <Loader fullScreen message="Guardando..." />}
 
-      <div
-        ref={containerRef}
-        style={{
-          flex: 1,
-          backgroundColor: '#F8FAFB',
-          borderRadius: '16px',
-          overflow: 'hidden',
-          position: 'relative',
-          border: '2px dashed rgba(66, 158, 189, 0.25)',
-          minHeight: 0, // Importante para flex
-        }}
-      >
+      {/* Contenedor principal que ocupa todo el ancho disponible */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        padding: '80px 24px 100px', // Espacio para header y botones flotantes
+      }}>
+        <div
+          ref={containerRef}
+          style={{
+            flex: 1,
+            backgroundColor: '#F8FAFB',
+            borderRadius: '16px',
+            overflow: 'hidden',
+            position: 'relative',
+            border: '2px dashed rgba(66, 158, 189, 0.25)',
+            minHeight: 0,
+          }}
+        >
         <svg
           width="100%"
           height="100%"
@@ -200,60 +216,68 @@ export const SignaturePage = () => {
         </svg>
 
         {!hasSignature && <Placeholder />}
+        </div>
       </div>
 
-      {/* Footer con botones - Compacto */}
+      {/* Botones flotantes en la parte inferior */}
       <div style={{
-        padding: '0 16px 12px 16px',
-        flexShrink: 0,
+        position: 'fixed',
+        bottom: '24px',
+        left: '50%',
+        transform: 'translateX(-50%)',
         display: 'flex',
-        flexDirection: 'column',
-        gap: '8px',
+        gap: '12px',
+        zIndex: 40,
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(10px)',
+        padding: '12px 20px',
+        borderRadius: '50px',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
       }}>
-        {/* Action Buttons */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '12px',
+        <Button
+          variant="primary"
+          onClick={handleSave}
+          disabled={!hasSignature || isLoading}
+          leftIcon={<Save size={20} />}
+          size="lg"
+        >
+          Guardar
+        </Button>
+
+        <Button
+          variant="secondary"
+          onClick={clear}
+          disabled={!hasSignature}
+          leftIcon={<Eraser size={20} />}
+          size="lg"
+        >
+          Borrar
+        </Button>
+      </div>
+
+      {/* Info + Progress - Flotante en esquina inferior derecha */}
+      <div style={{
+        position: 'fixed',
+        bottom: '24px',
+        right: '24px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '16px',
+        zIndex: 40,
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        backdropFilter: 'blur(10px)',
+        padding: '10px 16px',
+        borderRadius: '12px',
+        boxShadow: '0 2px 12px rgba(0, 0, 0, 0.1)',
+      }}>
+        <p style={{
+          fontSize: '12px',
+          color: THEME.colors.text.muted,
+          margin: 0,
         }}>
-          <Button
-            variant="primary"
-            onClick={handleSave}
-            disabled={!hasSignature || isLoading}
-            leftIcon={<Save size={20} />}
-            size="lg"
-          >
-            Guardar
-          </Button>
-
-          <Button
-            variant="secondary"
-            onClick={clear}
-            disabled={!hasSignature}
-            leftIcon={<Eraser size={20} />}
-            size="lg"
-          >
-            Borrar
-          </Button>
-        </div>
-
-        {/* Info + Progress */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '4px 0',
-        }}>
-          <p style={{
-            fontSize: '12px',
-            color: THEME.colors.text.muted,
-            margin: 0,
-          }}>
-            Usa tu dedo o un stylus para firmar
-          </p>
-
-          <ProgressDots total={totalSteps} current={3} />
-        </div>
+          Usa tu dedo o stylus
+        </p>
+        <ProgressDots total={totalSteps} current={3} />
       </div>
     </Layout>
   );

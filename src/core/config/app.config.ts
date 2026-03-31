@@ -56,7 +56,7 @@ export const CONFIG = {
   OCI: {
     NAMESPACE: 'idiliyph1zvh',
     REGION: 'us-ashburn-1',
-    BUCKET: 'testing',
+    BUCKET: 'bucket_cpscan',
     // URL base: https://{namespace}.objectstorage.{region}.oci.customer-oci.com
     // Formato completo: /n/{namespace}/b/{bucket}/o/{object-name}
   },
